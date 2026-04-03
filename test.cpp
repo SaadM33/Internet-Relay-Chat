@@ -210,7 +210,7 @@ int main(void)
 
 	std::cout << "=== STEP 7: Accepting client connection (BLOCKING CALL) ===" << std::endl;
 	std::cout << "⏳ Waiting for client connection..." << std::endl;
-	std::cout << "   (Try connecting with: telnet localhost 9999)" << std::endl;
+	std::cout << "   (Try connecting with: nc localhost 9999)" << std::endl;
 	
 	int client_fd = accept(server_fd, (struct sockaddr *)&client_addr, &client_len);
 	
