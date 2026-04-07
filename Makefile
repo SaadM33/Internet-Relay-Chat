@@ -2,7 +2,7 @@
 CC = c++
 CFLAGS = -g  -std=c++98
 NAME = ircserv
-SRCS = *.cpp
+SRCS = main.cpp Server.cpp 
 OBJS = $(SRCS:.cpp=.o)
 
 %.o: %.cpp
