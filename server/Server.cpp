@@ -1,29 +1,22 @@
 #include "Server.hpp"
 
-Server::Server() : port(0), passwd(""), core_fd(-1), c_banished(false) {}
-
-Server::~Server() {}
-
-void	Server::setArgs(int ac, char **av)
+Server::Server(int ac, char **av)
 {
-	if (ac != 3)
-	{
+	if (ac != 3){
 		throw std::invalid_argument("Usage: ./ircserv <port> <password>");
 	}
 	
 	char *endptr;
 	int port = std::strtod(av[1], &endptr);
-	if (port <= 0 || port > 65535 || *endptr != '\0')
-	{
+	if (port <= 0 || port > 65535 || *endptr != '\0'){
 		throw std::invalid_argument("Error: Invalid port number. Must be between 1 and 65535.");
 	}
-	
+
 	std::string	passwd = av[2];
-	if (passwd.empty())
-	{
+	if (passwd.empty()){
 		throw std::invalid_argument("Error: Password cannot be empty.");
 	}
-	
+
 	this->port = port;
 	this->passwd = passwd;
 }
@@ -61,16 +54,16 @@ void	Server::ascend()
 
 void	Server::ignite()
 {
-	this->poll_fds[0] = {core_fd, POLLIN, 0};
+	this->poll_fds.push_back((struct pollfd){core_fd, POLLIN, 0});
 
 	// ctrl c later
-	while (true) 
+	while (true)
 	{
 		if (poll(poll_fds.data(), poll_fds.size(), -1) == -1) {
 			throw std::runtime_error("Error: Failed to poll sockets.");
 		}
 
-		for (int i = 0; i < poll_fds.size(); i++)
+		for (size_t i = 0; i < poll_fds.size(); i++)
 		{
 			c_banished = false;
 			if (poll_fds[i].revents & POLLIN)  
@@ -78,14 +71,42 @@ void	Server::ignite()
 				if (poll_fds[i].fd == core_fd)
 					this->AcceptClient();
 				else
-					this->ProcessCmd();
+					this->ReceiveClient();
 			}
 			if (poll_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) { 
-				this->DisconnectClient(i);
+				this->DisconnectClient();
 			}
 			
 			if (c_banished)
 				i--;
 		}
 	}
+}
+
+// accpt new conn, upadte pollfd vec, make new Client with data, update other classes?,  
+void	Server::AcceptClient()
+{
+	struct sockaddr_in cAddr;
+	socklen_t cLen = sizeof(cAddr);
+
+	int new_fd = accept(core_fd, (struct sockaddr*)&cAddr, &cLen);
+	if (new_fd < 0)
+		throw std::logic_error("couldnt accept client");
+		
+	this->clients[new_fd] = new Client();
+	clients[new_fd]->setFd(new_fd);
+
+	this->poll_fds.push_back((struct pollfd){new_fd, POLLIN, 0});
+	
+	
+	
+	
+	
+	
+	std::cout << "New client connected: " << clients[new_fd] << std::endl;
+}
+
+void	Server::ReceiveClient()
+{	
+	std::cout << "Client received"<< std::endl;
 }

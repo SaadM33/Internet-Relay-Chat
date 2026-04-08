@@ -2,15 +2,13 @@
 
 int main(int ac, char **av)
 {
-	Server server;
+	Server Srv(ac, av);
 
 	try
 	{
-		server.setArgs(ac, av);
-
-		server.ascend();
-		server.ignite();
-		// server.nuke();
+		Srv.ascend();
+		Srv.ignite();
+		// Srv.nuke();
 		
 	}
 	catch (const std::exception& e)

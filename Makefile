@@ -1,32 +1,135 @@
+# This is the brain of the whole operation.
+# Let's get this ship going!
 
-CC = c++
-CFLAGS = -g  -std=c++98
-NAME = ircserv
-SRCS = main.cpp Server.cpp 
-OBJS = $(SRCS:.cpp=.o)
+# ──────────────────────────────────────────────────────────────────────────────
+# COLOURS
+# ──────────────────────────────────────────────────────────────────────────────
 
-%.o: %.cpp
-	$(CC) $(CFLAGS) -c $< -o $@
+RED          = \033[0;31m
+GREEN        = \033[0;32m
+BLUE         = \033[0;34m
+MAGENTA      = \033[0;35m
+CYAN         = \033[0;36m
 
-fresh: all clean
-	clear -x
+BOLD_RED     = \033[1;31m
+BOLD_GREEN   = \033[1;32m
+BOLD_BLUE    = \033[1;34m
+BOLD_MAGENTA = \033[1;35m
+BOLD_CYAN    = \033[1;36m
+
+RESET        = \033[0m
+
+# ──────────────────────────────────────────────────────────────────────────────
+# COMPILER SETTINGS
+# ──────────────────────────────────────────────────────────────────────────────
+
+CC			= c++
+
+CFLAGS      = -Wall -Wextra -Werror -g -std=c++98
+# CFLAGS      = -g -std=c++98
+
+CFLAGS_MAIN = $(CFLAGS) -I $(INCLUDES_DIR)
+
+RM			= rm -rf
+
+# ──────────────────────────────────────────────────────────────────────────────
+# DIRECTORIES
+# ──────────────────────────────────────────────────────────────────────────────
+
+SERVER_DIR		= server
+
+CLIENT_DIR		= client
+
+UTILS_DIR		= utils
+
+INCLUDES_DIR	= includes
+
+OBJ_DIR			= obj
+
+# ──────────────────────────────────────────────────────────────────────────────
+# FILE LISTS
+# ──────────────────────────────────────────────────────────────────────────────
+
+NAME			= ircserv
+
+INCLUDES_SRCS	= Server.hpp
+
+SERVER_SRCS		= Server.cpp
+
+CLIENT_SRCS		=
+
+UTILS_SRCS		=
+
+HEADER_FILE		= $(addprefix $(INCLUDES_DIR)/, $(INCLUDES_SRCS))
+
+SRCS			= main.cpp \
+				  $(addprefix $(SERVER_DIR)/, $(SERVER_SRCS)) \
+				  $(addprefix $(CLIENT_DIR)/, $(CLIENT_SRCS)) \
+				  $(addprefix $(UTILS_DIR)/, $(UTILS_SRCS))
+
+OBJECTS			= $(addprefix $(OBJ_DIR)/, $(SRCS:.cpp=.o))
+
+# ──────────────────────────────────────────────────────────────────────────────
+# BONUS
+# ──────────────────────────────────────────────────────────────────────────────
+
+CFLAGS_BONUS			= $(CFLAGS) -I $(BONUS_DIR)/$(INCLUDES_DIR)
+
+BONUS_DIR				= bonus
+
+NAME_BONUS				= ircserv_bonus
+
+INCLUDES_SRCS_BONUS		= server_bonus.hpp
+
+SERVER_SRCS_BONUS		= server_bonus.cpp
+
+CLIENT_SRCS_BONUS		= client_bonus.cpp
+
+UTILS_SRCS_BONUS		= 
+
+HEADER_FILE_BONUS		= $(addprefix $(BONUS_DIR)/$(INCLUDES_DIR)/, $(INCLUDES_SRCS_BONUS))
+
+SRCS_BONUS				= $(BONUS_DIR)/main_bonus.cpp \
+						  $(addprefix $(BONUS_DIR)/$(SERVER_DIR)/, $(SERVER_SRCS_BONUS)) \
+						  $(addprefix $(BONUS_DIR)/$(CLIENT_DIR)/, $(CLIENT_SRCS_BONUS)) \
+						  $(addprefix $(BONUS_DIR)/$(UTILS_DIR)/, $(UTILS_SRCS_BONUS))
+
+OBJECTS_BONUS			= $(addprefix $(OBJ_DIR)/, $(SRCS_BONUS:.cpp=.o))
+
+# ──────────────────────────────────────────────────────────────────────────────
+# TARGETS
+# ──────────────────────────────────────────────────────────────────────────────
+
+.PHONY: all clean fclean re bonus
 
 all: $(NAME)
 
-run: fresh
-	./$(NAME) input.txt
+bonus: $(NAME_BONUS)
 
+$(NAME): $(OBJECTS)
+	@$(CC) $(CFLAGS_MAIN) $(OBJECTS) -o $(NAME)
+	@echo "$(BOLD_GREEN)Executable ready!$(RESET)"
 
-$(NAME): $(OBJS)
-	$(CC) $(CFLAGS) $(OBJS) -o $(NAME)
+$(NAME_BONUS): $(OBJECTS_BONUS)
+	@$(CC) $(CFLAGS_BONUS) $(OBJECTS_BONUS) -o $(NAME_BONUS)
+	@echo "$(BOLD_GREEN)Bonus executable ready!$(RESET)"
+
+$(OBJ_DIR)/%.o: %.cpp $(HEADER_FILE)
+	@mkdir -p $(dir $@)
+	@$(CC) $(CFLAGS_MAIN) -c $< -o $@
+	@echo "$(CYAN)Compiling $<$(RESET)"
+
+$(OBJ_DIR)/$(BONUS_DIR)/%.o: $(BONUS_DIR)/%.cpp $(HEADER_FILE_BONUS)
+	@mkdir -p $(dir $@)
+	@$(CC) $(CFLAGS_BONUS) -c $< -o $@
+	@echo "$(CYAN)Compiling $<$(RESET)"
 
 clean:
-	rm -f $(OBJS)
+	@echo "$(BOLD_RED)Cleaning object files…$(RESET)"
+	@$(RM) $(OBJ_DIR)
 
 fclean: clean
-	rm -f $(NAME)
+	@echo "$(BOLD_RED)Cleaning executables…$(RESET)"
+	@$(RM) $(NAME) $(NAME_BONUS)
 
 re: fclean all
-
-.PHONY: all clean fclean re
-
