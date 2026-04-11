@@ -12,7 +12,8 @@
 #include <netinet/in.h>
 #include <poll.h>
 #include <cerrno>
-#include <cstdio>
+#include <fcntl.h>
+#include <arpa/inet.h>
 
 class Server
 {

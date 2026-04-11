@@ -34,7 +34,7 @@ void	Server::ascend()
 		throw std::runtime_error("Error: Failed to set socket option.");
 	}
 	
-	struct sockaddr_in addr;
+	sockaddr_in addr;
 
 	addr.sin_family = AF_INET;
 	addr.sin_port = htons(this->port);
@@ -59,12 +59,13 @@ void	Server::ignite()
 	// ctrl c later
 	while (true)
 	{
+		std::cout << "Poll returned with " << poll_fds.size() << " fds" << std::endl;
 		if (poll(poll_fds.data(), poll_fds.size(), -1) == -1) {
 			throw std::runtime_error("Error: Failed to poll sockets.");
 		}
-
 		for (size_t i = 0; i < poll_fds.size(); i++)
 		{
+			std::cout << "size of poll_fds: " << poll_fds.size() << std::endl;
 			c_banished = false;
 			if (poll_fds[i].revents & POLLIN)  
 			{
@@ -75,38 +76,35 @@ void	Server::ignite()
 			}
 			if (poll_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) { 
 				this->DisconnectClient();
+				std::cout << "Client disconnectedZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ" << std::endl;
 			}
-			
+
 			if (c_banished)
 				i--;
 		}
 	}
 }
 
-// accpt new conn, upadte pollfd vec, make new Client with data, update other classes?,  
 void	Server::AcceptClient()
 {
-	struct sockaddr_in cAddr;
+	sockaddr_in cAddr;
 	socklen_t cLen = sizeof(cAddr);
 
 	int new_fd = accept(core_fd, (struct sockaddr*)&cAddr, &cLen);
 	if (new_fd < 0)
-		throw std::logic_error("couldnt accept client");
-		
-	this->clients[new_fd] = new Client();
-	clients[new_fd]->setFd(new_fd);
+		throw std::logic_error("Couldnt accept client");
 
-	this->poll_fds.push_back((struct pollfd){new_fd, POLLIN, 0});
+	fcntl(new_fd, F_SETFL, O_NONBLOCK);
+
+	this->clients[new_fd] = new Client(new_fd); // add the client addr later 
 	
-	
-	
-	
-	
-	
-	std::cout << "New client connected: " << clients[new_fd] << std::endl;
+	this->poll_fds.push_back((pollfd){new_fd, POLLIN, 0});
 }
+
 
 void	Server::ReceiveClient()
-{	
+{
+
 	std::cout << "Client received"<< std::endl;
 }
+ 

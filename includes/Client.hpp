@@ -9,13 +9,13 @@ class Client
 	private:
 		
 		int	fd;
-		int	nickName;
+		std::string	nickName;
 		std::string	buff;
 
 	public:
-		Client() : fd(-1), nickName(-1), buff("") {};
+		Client(int fd) : fd(fd), nickName(""), buff("") {};
 		int getFd() { return fd; }; 
-		int getNickName() { return nickName; };
+		std::string getNickName() { return nickName; };
 		std::string getBuff() { return buff; };
 
 		void	setFd(int new_fd) { fd = new_fd; };
@@ -23,6 +23,7 @@ class Client
 
 };
 
+// for debug, remove later
 inline std::ostream& operator<<(std::ostream& os, Client& client)
 {
 	os << "Client fd: " << client.getFd() << ", Nickname: " << client.getNickName() << ", Buffer: " << client.getBuff();
