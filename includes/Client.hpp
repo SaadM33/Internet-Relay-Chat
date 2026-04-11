@@ -6,7 +6,7 @@
 
 class Client
 {
-	private:
+	public:
 		
 		int	fd;
 		std::string	nickName;

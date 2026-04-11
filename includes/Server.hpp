@@ -12,8 +12,11 @@
 #include <netinet/in.h>
 #include <poll.h>
 #include <cerrno>
+#include <unistd.h>
+#include <cstring>
 #include <fcntl.h>
 #include <arpa/inet.h>
+#include <cstdio>
 
 class Server
 {
@@ -41,9 +44,9 @@ class Server
 		void ascend();
 		void ignite();
 
-		void AcceptClient();
-		void ReceiveClient();
-		void DisconnectClient(){}
+		void AcceptClient( );
+		void ReceiveClient(int i);
+		void DisconnectClient(int i, int fd);
 
 
 };

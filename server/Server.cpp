@@ -59,24 +59,21 @@ void	Server::ignite()
 	// ctrl c later
 	while (true)
 	{
-		std::cout << "Poll returned with " << poll_fds.size() << " fds" << std::endl;
 		if (poll(poll_fds.data(), poll_fds.size(), -1) == -1) {
 			throw std::runtime_error("Error: Failed to poll sockets.");
 		}
 		for (size_t i = 0; i < poll_fds.size(); i++)
 		{
-			std::cout << "size of poll_fds: " << poll_fds.size() << std::endl;
 			c_banished = false;
 			if (poll_fds[i].revents & POLLIN)  
 			{
 				if (poll_fds[i].fd == core_fd)
 					this->AcceptClient();
 				else
-					this->ReceiveClient();
+					this->ReceiveClient(i);
 			}
 			if (poll_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) { 
-				this->DisconnectClient();
-				std::cout << "Client disconnectedZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZZ" << std::endl;
+				this->DisconnectClient(i, poll_fds[i].fd);
 			}
 
 			if (c_banished)
@@ -102,9 +99,34 @@ void	Server::AcceptClient()
 }
 
 
-void	Server::ReceiveClient()
+void	Server::ReceiveClient(int i)
 {
+	char 	buffer[102004];
+	int		fd = poll_fds[i].fd;
 
-	std::cout << "Client received"<< std::endl;
+	int ret = recv(fd, buffer, sizeof(buffer), 0);
+	if (ret < 0) {
+		std::cout << "Error receiving data from client: " << strerror(errno) << std::endl;
+		return;
+	}
+	if (ret == 0) {
+		this->DisconnectClient(i, fd);
+		return;
+	}
+	clients[fd]->buff.append(buffer, ret);
+	std::cout << "client buffer: < " << clients[fd]->buff << " >" << std::endl;
+
+}
+
+
+void	Server::DisconnectClient( int i, int fd)
+{
+	close(poll_fds[i].fd);
+	this->poll_fds.erase(poll_fds.begin() + i);
+	delete this->clients[fd];
+	this->clients.erase(fd);
+	c_banished = true;
+
+	std::cout << "Client disconnected" << std::endl;
 }
  
