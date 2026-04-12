@@ -52,9 +52,9 @@ OBJ_DIR			= obj
 
 NAME			= ircserv
 
-INCLUDES_SRCS	= Server.hpp
+INCLUDES_SRCS	= Server.hpp Client.hpp
 
-SERVER_SRCS		= Server.cpp
+SERVER_SRCS		= Server.cpp Parsing.cpp
 
 CLIENT_SRCS		=
 

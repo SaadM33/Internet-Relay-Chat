@@ -101,11 +101,9 @@ void	Server::AcceptClient()
 	
 	this->poll_fds.push_back((pollfd){new_fd, POLLIN, 0});
 	std::cout << "New client connected with fd: " << new_fd << std::endl;
-	// send(new_fd, "001 sel-maaq :Welcome to the <network> Network, sel-maaq[!sel-maaq@localhost]\r\n", 80, 0);
-
 }
 
-
+// /rawlog save /home/hqannouc/Internet-Relay-Chat/irc.log
 void	Server::ReceiveClient(int i)
 {
 	char 	tmp[1024] = {0};
@@ -122,15 +120,13 @@ void	Server::ReceiveClient(int i)
 	}
 
 	this->clients[fd]->c_buffer.append(tmp, ret);
+
+	//the client read buffer is ennding with \r\n, 
 	// std::cout << "Received data from client " << fd << ": " << this->clients[fd]->c_buffer << std::endl;
 }
 
 // this function will be called after receiving data, it will parse the buffer and execute the command
-void	Server::ProcessCmd(int i)
-{
-	// /rawlog open ~/1337/IRC/irc.log  run in irssi to log raw input and output from irssi
-	(void)i;	
-}
+
 
 
 void	Server::DisconnectClient( int i, int fd)

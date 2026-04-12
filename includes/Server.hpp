@@ -17,6 +17,8 @@
 #include <fcntl.h>
 #include <arpa/inet.h>
 #include <cstdio>
+#include <sstream>
+
 
 class Server
 {
@@ -31,7 +33,6 @@ class Server
 		std::map<int,Client *>		clients;
 		// std::map<int,Channel *>		channels;
 
-
 		bool						c_banished;
 
 		//client and channels
@@ -40,15 +41,22 @@ class Server
 		
 		Server(int ac, char **av);
 
-		void setArgs(int ac, char **av);
-		void ascend();
-		void ignite();
+		void	setArgs(int ac, char **av);
+		void	ascend();
+		void	ignite();
+		
+		void	AcceptClient();
+		void	ReceiveClient(int i);
+		void	ProcessCmd(int i);
 
-		void AcceptClient();
-		void ReceiveClient(int i);
-		void ProcessCmd(int i);
-
-		void DisconnectClient(int i, int fd);
-
-
+		void	DisconnectClient(int i, int fd);
 };
+
+typedef struct s_msg {
+	std::string					command;
+	std::vector<std::string> 	params;
+	std::string					trailing;
+}	Message;
+
+void	splitMessage(std::string unprocessed);
+std::string extractCommand(std::stringstream &ss);

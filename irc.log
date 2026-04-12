@@ -1,5 +1,30 @@
 << CAP LS
-<< PASS s
-<< NICK sel-maaq
-<< USER sel-maaq sel-maaq localhost :Saad El Maaqili
-
+<< PASS ta
+<< NICK hqannouc
+<< USER hqannouc hqannouc localhost :Hatim Qannouch
+>> :deeznuts!deeznuts@localhost PRIVMSG #general :hello world!
+>> 
+<< CAP LS
+<< NICK hqannouc
+<< USER hqannouc hqannouc localhost :Hatim Qannouch
+>> 001 Welcome Welcome !
+<< MODE Welcome +i
+<< WHOIS hqannouc
+<< PRIVMSG hqannouc :hhhhhh
+<< PING localhost
+<< CAP LS
+<< PASS ta
+<< NICK hqannouc
+<< USER hqannouc hqannouc localhost :Hatim Qannouch
+>> 001 Welcome Welcome !
+<< MODE Welcome +i
+<< WHOIS hqannouc
+<< PING localhost
+<< PRIVMSG hhh :afa
+<< CAP LS
+<< NICK hqannouc
+<< USER hqannouc hqannouc localhost :Hatim Qannouch
+>> 001 Welcome Welcome !
+<< MODE Welcome +i
+<< WHOIS hqannouc
+<< NICK saad
