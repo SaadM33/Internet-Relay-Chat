@@ -44,8 +44,10 @@ class Server
 		void ascend();
 		void ignite();
 
-		void AcceptClient( );
+		void AcceptClient();
 		void ReceiveClient(int i);
+		void ProcessCmd(int i);
+
 		void DisconnectClient(int i, int fd);
 
 

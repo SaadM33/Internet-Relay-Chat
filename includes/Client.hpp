@@ -10,13 +10,13 @@ class Client
 		
 		int	fd;
 		std::string	nickName;
-		std::string	buff;
+		std::string	c_buffer;
 
 	public:
-		Client(int fd) : fd(fd), nickName(""), buff("") {};
+		Client(int fd) : fd(fd), nickName(""), c_buffer("") {};
 		int getFd() { return fd; }; 
 		std::string getNickName() { return nickName; };
-		std::string getBuff() { return buff; };
+		std::string getBuff() { return c_buffer; };
 
 		void	setFd(int new_fd) { fd = new_fd; };
 		

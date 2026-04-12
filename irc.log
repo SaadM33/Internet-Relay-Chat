@@ -1,0 +1,5 @@
+<< CAP LS
+<< PASS s
+<< NICK sel-maaq
+<< USER sel-maaq sel-maaq localhost :Saad El Maaqili
+

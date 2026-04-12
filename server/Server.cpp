@@ -70,10 +70,14 @@ void	Server::ignite()
 				if (poll_fds[i].fd == core_fd)
 					this->AcceptClient();
 				else
+				{
 					this->ReceiveClient(i);
+					// this->ProcessCmd(i);
+				}
 			}
 			if (poll_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) { 
 				this->DisconnectClient(i, poll_fds[i].fd);
+				std::cout << "Error or hangup detected on client socket, disconnecting client." << std::endl;
 			}
 
 			if (c_banished)
@@ -96,15 +100,18 @@ void	Server::AcceptClient()
 	this->clients[new_fd] = new Client(new_fd); // add the client addr later 
 	
 	this->poll_fds.push_back((pollfd){new_fd, POLLIN, 0});
+	std::cout << "New client connected with fd: " << new_fd << std::endl;
+	// send(new_fd, "001 sel-maaq :Welcome to the <network> Network, sel-maaq[!sel-maaq@localhost]\r\n", 80, 0);
+
 }
 
 
 void	Server::ReceiveClient(int i)
 {
-	char 	buffer[102004];
+	char 	tmp[1024] = {0};
 	int		fd = poll_fds[i].fd;
 
-	int ret = recv(fd, buffer, sizeof(buffer), 0);
+	int ret = recv(fd, tmp, sizeof(tmp), 0);
 	if (ret < 0) {
 		std::cout << "Error receiving data from client: " << strerror(errno) << std::endl;
 		return;
@@ -113,9 +120,16 @@ void	Server::ReceiveClient(int i)
 		this->DisconnectClient(i, fd);
 		return;
 	}
-	clients[fd]->buff.append(buffer, ret);
-	std::cout << "client buffer: < " << clients[fd]->buff << " >" << std::endl;
 
+	this->clients[fd]->c_buffer.append(tmp, ret);
+	// std::cout << "Received data from client " << fd << ": " << this->clients[fd]->c_buffer << std::endl;
+}
+
+// this function will be called after receiving data, it will parse the buffer and execute the command
+void	Server::ProcessCmd(int i)
+{
+	// /rawlog open ~/1337/IRC/irc.log  run in irssi to log raw input and output from irssi
+	(void)i;	
 }
 
 
@@ -127,6 +141,6 @@ void	Server::DisconnectClient( int i, int fd)
 	this->clients.erase(fd);
 	c_banished = true;
 
-	std::cout << "Client disconnected" << std::endl;
+	std::cout << "Client " << fd << " disconnected" << std::endl;
 }
  
