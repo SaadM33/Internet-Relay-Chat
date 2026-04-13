@@ -1,76 +1,69 @@
 #include "Server.hpp"
 
-Message msg;
-
-std::string extractCommand(std::stringstream &ss)
+void extractCommand(std::stringstream &cmd, Message &msg)
 {
-	std::string word;
+	std::string command;
 
-	ss >> word;
-
-	for (size_t i = 0 ; i < word.size() ; i++)
-		word[i] = toupper(word[i]);
-	msg.command = word;
-	return word;
+	cmd >> command;
+	for (size_t i = 0 ; i < command.size() ; i++)
+		command.at(i) = toupper(command.at(i));
+	msg.command = command;
 }
 
-// std::string extractParameters(std::stringstream &ss)
-// {
-// 	std::string word;
-
-// 	while (ss >> word && word[0] != ':')
-// 		msg.params.push_back(word);
-// 	// if (word[0] == ':')
-// 	// 	msg.trailing = 1;
-	
-// 	// while (true)
-// 	// {
-// 	// 	std::streampos pos = ss.tellg();
-// 	// 	if (!(ss >> word)) break;
-
-// 	// 	if (word[0] == ':')
-// 	// 	{
-// 	// 		ss.seekg(pos);  // put it back
-// 	// 		break;
-// 	// 	}
-// 	// 	msg.params.push_back(word);
-// 	// }
-
-// 	if (word[0] == ':')
-// 		msg.trailing = word.substr(1);
-// }
-
-// // USER deeznuts 0 * :Real Name teez \r\n 
-// std::string extractTrailing(std::stringstream &ss)
-// {
-
-// 	getline()
-// 	while (ss >> word)
-// 		msg.trailing += word + " ";
-// 	msg.trailing.pop_back();
-// }
-
-void	splitMessage(std::string unprocessed)
+void extractParams(std::stringstream &prm, Message &msg)
 {
-	size_t it =	unprocessed.find(" :");
-	std::string param = unprocessed.substr(0, it);
-	if (it != std::string::npos)
-	{
-		std::stringstream ss(param);
-		extractCommand(ss);
-		std::string trailing = unprocessed.substr(it + 2);
-	}
-	std::string word;
+	std::string param;
 
-	//extractRest(ss)
-	//find " :"
-		//substr 0, it
-		//handle it in extractparam
-		//substr it, \r\n
-		//handle it in extracttrail
-	//else
-	//substr 0, \r\n
-	//handle it in extractparam
-	// extractParameters(ss);
-	// extractTrailing(ss);
+	while (prm >> param)
+		msg.params.push_back(param);
+}
+
+void extractTraling(std::string &trail, Message &msg)
+{
+	msg.trailing = trail;
+}
+
+Message	splitMessage(std::string unprocessed)
+{
+	Message	msg;
+	size_t	trailIndex = unprocessed.find(" :");
+	if (trailIndex != std::string::npos)
+	{
+		std::string param = unprocessed.substr(0, trailIndex);
+		std::stringstream cmdAndParams(param);
+		// handle the command and parameters as a stream to automatically skip spaces
+		extractCommand(cmdAndParams, msg);
+		extractParams(cmdAndParams, msg);
+		// handle the trailing as a string to conserve the spaces
+		std::string trailing = unprocessed.substr(trailIndex + 2); // +2 to skip the : character
+		extractTraling(trailing, msg);
+	}
+	else
+	{
+		std::stringstream cmdAndParams(unprocessed);
+		extractCommand(cmdAndParams, msg);
+		extractParams(cmdAndParams, msg);
+	}
+	return msg;
+}
+
+
+void	Server::handleInput(int fd)
+{
+	std::string input = this->clients[fd]->c_buffer;
+	size_t	line = 0;
+	size_t	lineIndex = input.find("\r\n");
+	while (lineIndex != std::string::npos)
+	{
+		std::string unprocessedLine(input, line, lineIndex);
+		line = lineIndex + 1;
+		Message msg = splitMessage(unprocessedLine);
+		std::cout << "Command: ---" << msg.command << "---" << std::endl;
+		std::cout << "Params:" << std::endl;
+		for (size_t i = 0; i < msg.params.size(); i++)
+			std::cout << "---" << msg.params.at(i) << "---" << std::endl;
+		std::cout << "trailing: ---" << msg.trailing << "---" << std::endl;
+		this->processCmd(fd, msg);
+		lineIndex = input.find("\r\n", line);
+	}
 }

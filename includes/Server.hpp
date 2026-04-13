@@ -19,6 +19,11 @@
 #include <cstdio>
 #include <sstream>
 
+typedef struct s_msg {
+	std::string					command;
+	std::vector<std::string> 	params;
+	std::string					trailing;
+}	Message;
 
 class Server
 {
@@ -39,24 +44,17 @@ class Server
 
 	public:
 		
-		Server(int ac, char **av);
+		Server(int, char **);
 
-		void	setArgs(int ac, char **av);
+		void	setArgs(int, char **);
 		void	ascend();
 		void	ignite();
 		
-		void	AcceptClient();
-		void	ReceiveClient(int i);
-		void	ProcessCmd(int i);
+		void	acceptClient();
+		void	receiveClient(int);
+		void	processCmd(int, Message);
 
-		void	DisconnectClient(int i, int fd);
+		void	handleInput(int);
+
+		void	disconnectClient(int, int);
 };
-
-typedef struct s_msg {
-	std::string					command;
-	std::vector<std::string> 	params;
-	std::string					trailing;
-}	Message;
-
-void	splitMessage(std::string unprocessed);
-std::string extractCommand(std::stringstream &ss);
