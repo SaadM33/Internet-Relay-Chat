@@ -122,7 +122,7 @@ bool	Server::receiveClient(int i)
 		return 0;
 	}
 
-	this->clients[fd]->c_buffer.append(tmp, ret);
+	this->clients[fd]->r_buffer.append(tmp, ret);
 
 	//the client read buffer is ennding with \r\n, 
 	// std::cout << "Received data from client " << fd << ": " << this->clients[fd]->c_buffer << std::endl;
@@ -133,14 +133,14 @@ bool	Server::receiveClient(int i)
 
 
 
-void	Server::disconnectClient( int i, int fd)
+void	Server::disconnectClient(int i, int fd)
 {
 	close(poll_fds[i].fd);
 	this->poll_fds.erase(poll_fds.begin() + i);
 	delete this->clients[fd];
 	this->clients.erase(fd);
 	c_banished = true;
-
+	
 	std::cout << "Client " << fd << " disconnected" << std::endl;
 }
  

@@ -8,15 +8,23 @@ class Client
 {
 	public:
 		int			fd;
+
 		std::string	nickName;
-		std::string	c_buffer;
+
 		bool		isRegistered;
+		bool		has_password;
+		bool		has_nick;
+		bool		has_user;
+
+		std::string	r_buffer;
+		char*		w_buffer;
+
 
 	public:
-		Client(int fd) : fd(fd), nickName(""), c_buffer(""), isRegistered(false) {};
+		Client(int fd) : fd(fd), nickName(""), isRegistered(false), r_buffer("") {};
 		int getFd() { return fd; }; 
 		std::string getNickName() { return nickName; };
-		std::string getBuff() { return c_buffer; };
+		std::string getBuff() { return r_buffer; };
 
 		void	setFd(int new_fd) { fd = new_fd; };
 		

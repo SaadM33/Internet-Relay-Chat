@@ -26,8 +26,7 @@ typedef struct s_msg {
 }	Message;
 
 class Server;
-
-typedef void (Server::*CmdHandler)(Message msg);
+typedef void (Server::*cmdHandler)(int, Message);
 
 class Server
 {
@@ -43,7 +42,7 @@ class Server
 
 		bool								c_banished;
 
-		std::map<std::string, CmdHandler>	cmdMap;
+		std::map<std::string, cmdHandler>	cmdMap;
 
 	public:
 		
@@ -60,5 +59,8 @@ class Server
 		void	handleInput(int);
 
 		void	disconnectClient(int, int);
-};
 
+		void	execPass(int, Message);
+		void	execUser(int, Message);
+		void	execNick(int, Message);
+};
