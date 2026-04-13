@@ -19,6 +19,12 @@
 #include <cstdio>
 #include <sstream>
 
+typedef struct s_msg {
+	std::string					command;
+	std::vector<std::string> 	params;
+	std::string					trailing;
+}	Message;
+
 
 class Server
 {
@@ -37,26 +43,20 @@ class Server
 		std::map<std::string, CmdHandler>	cmdMap;
 
 	public:
-		Server(int, char);
+		
+		Server(int, char **);
 
 		void	setArgs(int, char **);
 		void	ascend();
 		void	ignite();
 		
-		void	AcceptClient();
-		void	ReceiveClient(int i);
+		void	acceptClient();
+		void	receiveClient(int);
 		void	processCmd(int, Message);
 
-		void	DisconnectClient(int, int);
+		void	handleInput(int);
+
+		void	disconnectClient(int, int);
 };
 
-typedef struct s_msg {
-	std::string					command;
-	std::vector<std::string> 	params;
-	std::string					trailing;
-}	Message;
-
 typedef void (Server::*CmdHandler)(Message msg);
-
-void	splitMessage(std::string unprocessed);
-std::string extractCommand(std::stringstream &ss);

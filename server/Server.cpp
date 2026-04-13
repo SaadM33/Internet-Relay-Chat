@@ -68,15 +68,15 @@ void	Server::ignite()
 			if (poll_fds[i].revents & POLLIN)  
 			{
 				if (poll_fds[i].fd == core_fd)
-					this->AcceptClient();
+					this->acceptClient();
 				else
 				{
-					this->ReceiveClient(i);
-					// this->ProcessCmd(i);
+					this->receiveClient(i);
+					this->handleInput(i);
 				}
 			}
 			if (poll_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) { 
-				this->DisconnectClient(i, poll_fds[i].fd);
+				this->disconnectClient(i, poll_fds[i].fd);
 				std::cout << "Error or hangup detected on client socket, disconnecting client." << std::endl;
 			}
 
@@ -86,7 +86,7 @@ void	Server::ignite()
 	}
 }
 
-void	Server::AcceptClient()
+void	Server::acceptClient()
 {
 	sockaddr_in cAddr;
 	socklen_t cLen = sizeof(cAddr);
@@ -104,7 +104,7 @@ void	Server::AcceptClient()
 }
 
 // /rawlog save /home/hqannouc/Internet-Relay-Chat/irc.log
-void	Server::ReceiveClient(int i)
+void	Server::receiveClient(int i)
 {
 	char 	tmp[1024] = {0};
 	int		fd = poll_fds[i].fd;
@@ -115,7 +115,7 @@ void	Server::ReceiveClient(int i)
 		return;
 	}
 	if (ret == 0) {
-		this->DisconnectClient(i, fd);
+		this->disconnectClient(i, fd);
 		return;
 	}
 
@@ -129,7 +129,7 @@ void	Server::ReceiveClient(int i)
 
 
 
-void	Server::DisconnectClient( int i, int fd)
+void	Server::disconnectClient( int i, int fd)
 {
 	close(poll_fds[i].fd);
 	this->poll_fds.erase(poll_fds.begin() + i);
