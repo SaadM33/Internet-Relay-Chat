@@ -72,7 +72,7 @@ void	Server::ignite()
 				else
 				{
 					this->receiveClient(i);
-					this->handleInput(i);
+					this->handleInput(poll_fds[i].fd);
 				}
 			}
 			if (poll_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) { 
@@ -119,24 +119,24 @@ void	Server::receiveClient(int i)
 		return;
 	}
 
-	this->clients[fd]->c_buffer.append(tmp, ret);
+	this->clients[fd]->r_buffer.append(tmp, ret);
 
 	//the client read buffer is ennding with \r\n, 
-	// std::cout << "Received data from client " << fd << ": " << this->clients[fd]->c_buffer << std::endl;
+	std::cout << "Received data from client " << fd << ": " << this->clients[fd]->r_buffer << std::endl;
 }
 
 // this function will be called after receiving data, it will parse the buffer and execute the command
 
 
 
-void	Server::disconnectClient( int i, int fd)
+void	Server::disconnectClient(int i, int fd)
 {
 	close(poll_fds[i].fd);
 	this->poll_fds.erase(poll_fds.begin() + i);
 	delete this->clients[fd];
 	this->clients.erase(fd);
 	c_banished = true;
-
+	
 	std::cout << "Client " << fd << " disconnected" << std::endl;
 }
  

@@ -50,7 +50,7 @@ Message	splitMessage(std::string unprocessed)
 
 void	Server::handleInput(int fd)
 {
-	std::string input = this->clients[fd]->c_buffer;
+	std::string input = this->clients[fd]->r_buffer;
 	size_t	line = 0;
 	size_t	lineIndex = input.find("\r\n");
 	while (lineIndex != std::string::npos)
