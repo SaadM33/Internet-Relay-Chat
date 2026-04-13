@@ -7,13 +7,13 @@
 class Client
 {
 	public:
-		
-		int	fd;
+		int			fd;
 		std::string	nickName;
 		std::string	c_buffer;
+		bool		isRegistered;
 
 	public:
-		Client(int fd) : fd(fd), nickName(""), c_buffer("") {};
+		Client(int fd) : fd(fd), nickName(""), c_buffer(""), isRegistered(false) {};
 		int getFd() { return fd; }; 
 		std::string getNickName() { return nickName; };
 		std::string getBuff() { return c_buffer; };

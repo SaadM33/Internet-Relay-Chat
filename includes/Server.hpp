@@ -23,33 +23,31 @@
 class Server
 {
 	private:
+		int									port;
+		std::string							passwd;
 
-		int							port;
-		std::string					passwd;
+		int									core_fd;
+		std::vector<struct pollfd>			poll_fds;
 
-		int							core_fd;
-		std::vector<struct pollfd>	poll_fds;
-
-		std::map<int,Client *>		clients;
+		std::map<int,Client *>				clients;
 		// std::map<int,Channel *>		channels;
 
-		bool						c_banished;
+		bool								c_banished;
 
-		//client and channels
+		std::map<std::string, CmdHandler>	cmdMap;
 
 	public:
-		
-		Server(int ac, char **av);
+		Server(int, char);
 
-		void	setArgs(int ac, char **av);
+		void	setArgs(int, char **);
 		void	ascend();
 		void	ignite();
 		
 		void	AcceptClient();
 		void	ReceiveClient(int i);
-		void	ProcessCmd(int i);
+		void	processCmd(int, Message);
 
-		void	DisconnectClient(int i, int fd);
+		void	DisconnectClient(int, int);
 };
 
 typedef struct s_msg {
@@ -57,6 +55,8 @@ typedef struct s_msg {
 	std::vector<std::string> 	params;
 	std::string					trailing;
 }	Message;
+
+typedef void (Server::*CmdHandler)(Message msg);
 
 void	splitMessage(std::string unprocessed);
 std::string extractCommand(std::stringstream &ss);
