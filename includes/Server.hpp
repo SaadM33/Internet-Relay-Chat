@@ -59,6 +59,7 @@ class Server
 		void	handleInput(int);
 
 		void	disconnectClient(int, int);
+		void	registerClient(int);
 
 		void	execPass(int, Message);
 		void	execUser(int, Message);

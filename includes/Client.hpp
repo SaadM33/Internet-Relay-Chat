@@ -10,9 +10,11 @@ class Client
 		int			fd;
 
 		std::string	nickName;
+		std::string	userName;
+		std::string realName;
 
 		bool		isRegistered;
-		bool		has_password;
+		bool		has_pass;
 		bool		has_nick;
 		bool		has_user;
 
@@ -27,6 +29,9 @@ class Client
 		std::string getBuff() { return r_buffer; };
 
 		void	setFd(int new_fd) { fd = new_fd; };
+		void	setNickName(std::string new_nick) {nickName = new_nick;};
+		void	setUserName(std::string new_user) {nickName = new_user;};
+		void	setRealName(std::string new_real) {nickName = new_real;};
 		
 
 };
