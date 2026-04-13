@@ -53,7 +53,7 @@ class Server
 		void	ignite();
 		
 		void	acceptClient();
-		void	receiveClient(int);
+		bool	receiveClient(int);
 		void	processCmd(int, Message);
 
 		void	handleInput(int);
