@@ -19,6 +19,7 @@ Server::Server(int ac, char **av)
 
 	this->port = port;
 	this->passwd = passwd;
+	// this->fillMap(); // to be implemented
 }
 
 
@@ -71,8 +72,11 @@ void	Server::ignite()
 					this->acceptClient();
 				else
 				{
-					this->receiveClient(i);
-					this->handleInput(i);
+					bool check = this->receiveClient(i);
+					if (check)
+						this->handleInput(poll_fds[i].fd);
+					else
+						break;
 				}
 			}
 			if (poll_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) { 
@@ -97,14 +101,13 @@ void	Server::acceptClient()
 
 	fcntl(new_fd, F_SETFL, O_NONBLOCK);
 
-	this->clients[new_fd] = new Client(new_fd); // add the client addr later 
-	
+	this->clients[new_fd] = new Client(new_fd); // add the client addr later
 	this->poll_fds.push_back((pollfd){new_fd, POLLIN, 0});
 	std::cout << "New client connected with fd: " << new_fd << std::endl;
 }
 
 // /rawlog save /home/hqannouc/Internet-Relay-Chat/irc.log
-void	Server::receiveClient(int i)
+bool	Server::receiveClient(int i)
 {
 	char 	tmp[1024] = {0};
 	int		fd = poll_fds[i].fd;
@@ -112,17 +115,18 @@ void	Server::receiveClient(int i)
 	int ret = recv(fd, tmp, sizeof(tmp), 0);
 	if (ret < 0) {
 		std::cout << "Error receiving data from client: " << strerror(errno) << std::endl;
-		return;
+		return 0;
 	}
 	if (ret == 0) {
 		this->disconnectClient(i, fd);
-		return;
+		return 0;
 	}
 
 	this->clients[fd]->c_buffer.append(tmp, ret);
 
 	//the client read buffer is ennding with \r\n, 
 	// std::cout << "Received data from client " << fd << ": " << this->clients[fd]->c_buffer << std::endl;
+	return 1;
 }
 
 // this function will be called after receiving data, it will parse the buffer and execute the command

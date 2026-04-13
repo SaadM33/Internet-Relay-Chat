@@ -25,6 +25,9 @@ typedef struct s_msg {
 	std::string					trailing;
 }	Message;
 
+class Server;
+
+typedef void (Server::*CmdHandler)(Message msg);
 
 class Server
 {
@@ -51,7 +54,7 @@ class Server
 		void	ignite();
 		
 		void	acceptClient();
-		void	receiveClient(int);
+		bool	receiveClient(int);
 		void	processCmd(int, Message);
 
 		void	handleInput(int);
@@ -59,4 +62,3 @@ class Server
 		void	disconnectClient(int, int);
 };
 
-typedef void (Server::*CmdHandler)(Message msg);

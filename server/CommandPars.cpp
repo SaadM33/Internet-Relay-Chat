@@ -13,7 +13,7 @@ static bool	isNumericCmd(std::string command) {
 }
 
 static bool	isAlphaCmd(std::string command) {
-	for (int i = 0; i < command.length(); i++) {
+	for (size_t i = 0; i < command.length(); i++) {
 		if (!isalpha(command[i]))
 			return false;
 	}
