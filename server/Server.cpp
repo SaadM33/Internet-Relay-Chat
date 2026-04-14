@@ -22,7 +22,6 @@ Server::Server(int ac, char **av)
 	// this->fillMap(); // to be implemented
 }
 
-
 void	Server::ascend()
 {
 	this->core_fd = socket(AF_INET, SOCK_STREAM, 0);
@@ -51,7 +50,6 @@ void	Server::ascend()
 
 	std::cout << "Server is listening on port " << this->port << std::endl;
 }
-
 
 void	Server::ignite()
 {
@@ -97,6 +95,7 @@ void	Server::acceptClient()
 
 	this->clients[new_fd] = new Client(new_fd); // add the client addr later
 	this->poll_fds.push_back((pollfd){new_fd, POLLIN, 0});
+
 	std::cout << "New client connected with fd: " << new_fd << std::endl;
 }
 
@@ -114,12 +113,7 @@ void	Server::processClient(int i)
 	this->clients[fd]->r_buffer.append(tmp, ret);
 
 	this->handleInput(fd);
-
 }
-
-// this function will be called after receiving data, it will parse the buffer and execute the command
-
-
 
 void	Server::disconnectClient(int i, int fd)
 {

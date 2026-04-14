@@ -48,7 +48,6 @@ class Server
 		
 		Server(int, char **);
 
-		void	setArgs(int, char **);
 		void	ascend();
 		void	ignite();
 		

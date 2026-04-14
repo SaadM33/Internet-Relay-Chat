@@ -50,18 +50,25 @@ Message	splitMessage(std::string unprocessed)
 
 void	Server::handleInput(int fd)
 {
-	std::string input = this->clients[fd]->r_buffer;
-	size_t	line = 0;
-	size_t	lineIndex = input.find("\r\n");
+	std::string &input = this->clients[fd]->r_buffer;
+	size_t	lineIndex;
 
-	while (lineIndex != std::string::npos)
+	while ((lineIndex = input.find("\r\n")) != std::string::npos)
 	{
-		std::string unprocessedLine(input, line, lineIndex); //erase to simplify
-		line = lineIndex + 1;
+		std::cout << "-----Buffer before processing: " << input << "-----" << std::endl;
+		std::string unprocessedLine = input.substr(0, lineIndex);
+
+		input.erase(0, lineIndex + 2);
+		
 
 		Message msg = splitMessage(unprocessedLine);
+		
+		std::cout << "Received command: " << msg.command << " with parameters: ";
+		for (size_t i = 0; i < msg.params.size(); ++i)
+			std::cout << msg.params[i] << " ";
+		std::cout << "trailing: " << msg.trailing << std::endl;
 
 		this->processCmd(fd, msg);
-		lineIndex = input.find("\r\n", line);
+		std::cout << "-----Buffer after processing: " << input << "-----" << std::endl;
 	}
 }
