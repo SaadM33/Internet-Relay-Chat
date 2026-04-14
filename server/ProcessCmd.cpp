@@ -1,17 +1,5 @@
 #include "Server.hpp"
 
-static bool	isNumericCmd(std::string command) {
-	if (command.size() != 3)
-		return false;
-
-	for (int i = 0; i < 3; i++) {
-		if (!isdigit(command[i]))
-			return false;
-	}
-
-	return true;
-}
-
 static bool	isAlphaCmd(std::string command) {
 	for (size_t i = 0; i < command.length(); i++) {
 		if (!isalpha(command[i]))
@@ -21,9 +9,6 @@ static bool	isAlphaCmd(std::string command) {
 }
 
 bool	isValidCommand(std::string command) {
-	if (isNumericCmd(command))
-		return true;
-	
 	if (isAlphaCmd(command))
 		return true;
 	
@@ -39,6 +24,7 @@ void	Server::processCmd(int fd, Message msg) {
 		return ;
 
 	if (needsRegistration(msg.command) && !this->clients[fd]->isRegistered)
+		//send error wla whatever
 		return ;
 
 	std::map<std::string, cmdHandler>::iterator it = cmdMap.find(msg.command);

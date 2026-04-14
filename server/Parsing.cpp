@@ -53,16 +53,14 @@ void	Server::handleInput(int fd)
 	std::string input = this->clients[fd]->r_buffer;
 	size_t	line = 0;
 	size_t	lineIndex = input.find("\r\n");
+
 	while (lineIndex != std::string::npos)
 	{
-		std::string unprocessedLine(input, line, lineIndex);
+		std::string unprocessedLine(input, line, lineIndex); //erase to simplify
 		line = lineIndex + 1;
+
 		Message msg = splitMessage(unprocessedLine);
-		std::cout << "Command: ---" << msg.command << "---" << std::endl;
-		std::cout << "Params:" << std::endl;
-		for (size_t i = 0; i < msg.params.size(); i++)
-			std::cout << "---" << msg.params.at(i) << "---" << std::endl;
-		std::cout << "trailing: ---" << msg.trailing << "---" << std::endl;
+
 		this->processCmd(fd, msg);
 		lineIndex = input.find("\r\n", line);
 	}

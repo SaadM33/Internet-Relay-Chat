@@ -19,10 +19,10 @@ bool	isAlnumStr(std::string str) {
 void	Server::execPass(int fd, Message msg)
 {
 	if (this->clients[fd]->isRegistered) {
-		//send 462
+		//send 462, what if we send the wrong code, error or output change in ssi y?
 		return ;
 	}
-
+ 
 	if (msg.params.size() != 1) {
 		if (msg.params.empty())
 			//send 461
@@ -45,7 +45,7 @@ void	Server::execNick(int fd, Message msg)
 		return ;
 	}
 
-	if (!isAlnumStr(msg.params[0]))
+	if (!isAlnumStr(msg.params[0])) //later underscore
 	{
 		//send 432
 		return ;
@@ -71,17 +71,20 @@ void	Server::execNick(int fd, Message msg)
 
 void	Server::execUser(int fd, Message msg)
 {
+	// USER <username> <localhost>
 	if (this->clients[fd]->isRegistered) {
 		//send 462
 		return ;
 	}
+
+
 	if (msg.params.size() < 3 && msg.trailing.empty())
 	{
 		//send 461
 		return ;
 	}
 	this->clients[fd]->setUserName(msg.params[0]);
-	this->clients[fd]->setRealName(msg.params[1]);
+	this->clients[fd]->setRealName(msg.trailing);
 	this->clients[fd]->has_user = true;
 }
 //fct if hadi w hadi w hadi -> isRegistered = true -> send 001;
