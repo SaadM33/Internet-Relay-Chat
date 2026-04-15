@@ -87,6 +87,38 @@ void	Server::execUser(int fd, Message msg)
 	this->clients[fd]->setRealName(msg.trailing);
 	this->clients[fd]->has_user = true;
 }
+
+void	Server::execCap(int fd, Message msg) { (void)fd, (void)msg; }
+
+void	Server::execPing(int fd, Message msg) { (void)fd, (void)msg; }
+
+void	Server::execPong(int fd, Message msg) { (void)fd, (void)msg; }
+
+void	Server::execQuit(int fd, Message msg) { (void)fd, (void)msg; }
+
+void	Server::execJoin(int fd, Message msg) { (void)fd, (void)msg; }
+
+void	Server::execPart(int fd, Message msg) { (void)fd, (void)msg; }
+
+void	Server::execTopic(int fd, Message msg) { (void)fd, (void)msg; }
+
+void	Server::execNames(int fd, Message msg) { (void)fd, (void)msg; }
+
+void	Server::execInvite(int fd, Message msg) { (void)fd, (void)msg; }
+
+void	Server::execKick(int fd, Message msg) { (void)fd, (void)msg; }
+
+void	Server::execMode(int fd, Message msg) { (void)fd, (void)msg; }
+
+void	Server::execPrivmsg(int fd, Message msg) { (void)fd, (void)msg; }
+
+void	Server::execNotice(int fd, Message msg) { (void)fd, (void)msg; }
+
+void	Server::execWho(int fd, Message msg) { (void)fd, (void)msg; }
+
+void	Server::execWhois(int fd, Message msg) { (void)fd, (void)msg; }
+
+
 //fct if hadi w hadi w hadi -> isRegistered = true -> send 001;
 void	Server::registerClient(int fd) {
 	if (clients[fd]->has_nick && clients[fd]->has_user && clients[fd]->has_pass)

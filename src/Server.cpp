@@ -19,7 +19,29 @@ Server::Server(int ac, char **av)
 
 	this->port = port;
 	this->passwd = passwd;
-	// this->fillMap(); // to be implemented
+	this->instantiateCmds();
+}
+
+void    Server::instantiateCmds()
+{
+	this->cmdMap["CAP"] = &Server::execCap;
+	this->cmdMap["PASS"] = &Server::execPass;
+	this->cmdMap["NICK"] = &Server::execNick;
+	this->cmdMap["USER"] = &Server::execUser;
+	this->cmdMap["PING"] = &Server::execPing;
+	this->cmdMap["PONG"] = &Server::execPong;
+	this->cmdMap["QUIT"] = &Server::execQuit;
+	this->cmdMap["JOIN"] = &Server::execJoin;
+	this->cmdMap["PART"] = &Server::execPart;
+	this->cmdMap["TOPIC"] = &Server::execTopic;
+	this->cmdMap["NAMES"] = &Server::execNames;
+	this->cmdMap["INVITE"] = &Server::execInvite;
+	this->cmdMap["KICK"] = &Server::execKick;
+	this->cmdMap["MODE"] = &Server::execMode;
+	this->cmdMap["PRIVMSG"] = &Server::execPrivmsg;
+	this->cmdMap["NOTICE"] = &Server::execNotice;
+	this->cmdMap["WHO"] = &Server::execWho;
+	this->cmdMap["WHOIS"] = &Server::execWhois;
 }
 
 void	Server::ascend()

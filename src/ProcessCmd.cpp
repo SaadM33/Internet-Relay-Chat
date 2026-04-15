@@ -13,10 +13,12 @@ void	Server::processCmd(int fd, Message msg) {
 	}
 
 	std::map<std::string, cmdHandler>::iterator it = cmdMap.find(msg.command); // fill the cmdMap with the command name as key and the corresponding member function pointer as value
-	if (it != cmdMap.end()) {
+	if (it != cmdMap.end())
+	{
 		(this->*(it->second))(fd, msg);
 	}
-	else {
+	else
+	{
 		std::string errorMsg = "MyServerName 421" + this->clients[fd]->nickName + " " + msg.command + " :Unknown command\r\n";
 
 		send(fd, errorMsg.c_str(), errorMsg.size(), 0); //store the erorMsg later into the write buffer of client[fd]

@@ -48,6 +48,7 @@ class Server
 		
 		Server(int, char **);
 
+		void	instantiateCmds();
 		void	ascend();
 		void	ignite();
 		
@@ -60,7 +61,22 @@ class Server
 		void	disconnectClient(int, int);
 		void	registerClient(int);
 
+		void	execCap(int, Message);
 		void	execPass(int, Message);
-		void	execUser(int, Message);
 		void	execNick(int, Message);
+		void	execUser(int, Message);
+		void	execPing(int, Message);
+		void	execPong(int, Message);
+		void	execQuit(int, Message);
+		void	execJoin(int, Message);
+		void	execPart(int, Message);
+		void	execTopic(int, Message);
+		void	execNames(int, Message);
+		void	execInvite(int, Message);
+		void	execKick(int, Message);
+		void	execMode(int, Message);
+		void	execPrivmsg(int, Message);
+		void	execNotice(int, Message);
+		void	execWho(int, Message);
+		void	execWhois(int, Message);
 };

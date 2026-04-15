@@ -36,7 +36,7 @@ RM			= rm -rf
 # DIRECTORIES
 # ──────────────────────────────────────────────────────────────────────────────
 
-SERVER_DIR		= server
+SERVER_DIR		= src
 
 CLIENT_DIR		= client
 
@@ -54,7 +54,7 @@ NAME			= ircserv
 
 INCLUDES_SRCS	= Server.hpp Client.hpp
 
-SERVER_SRCS		= Server.cpp Parsing.cpp ProcessCmd.cpp
+SERVER_SRCS		= Server.cpp Parsing.cpp ProcessCmd.cpp Commands.cpp
 
 CLIENT_SRCS		=
 
