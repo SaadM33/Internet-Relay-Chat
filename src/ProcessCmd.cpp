@@ -12,7 +12,7 @@ void	Server::processCmd(int fd, Message msg) {
 		return ;
 	}
 
-	std::map<std::string, cmdHandler>::iterator it = cmdMap.find(msg.command); // fill the cmdMap with the command name as key and the corresponding member function pointer as value
+	std::map<std::string, cmdHandler>::iterator it = cmdMap.find(msg.command);
 	if (it != cmdMap.end())
 	{
 		(this->*(it->second))(fd, msg);

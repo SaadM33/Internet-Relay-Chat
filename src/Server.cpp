@@ -2,10 +2,9 @@
 
 Server::Server(int ac, char **av)
 {
-	if (ac != 3){
+	if (ac != 3)
 		throw std::invalid_argument("Usage: ./ircserv <port> <password>");
-	}
-	
+
 	char *endptr;
 	int port = std::strtod(av[1], &endptr);
 	if (port <= 0 || port > 65535 || *endptr != '\0'){
@@ -13,9 +12,8 @@ Server::Server(int ac, char **av)
 	}
 
 	std::string	passwd = av[2];
-	if (passwd.empty()){
+	if (passwd.empty())
 		throw std::invalid_argument("Error: Password cannot be empty.");
-	}
 
 	this->port = port;
 	this->passwd = passwd;
@@ -28,20 +26,13 @@ void    Server::instantiateCmds()
 	this->cmdMap["PASS"] = &Server::execPass;
 	this->cmdMap["NICK"] = &Server::execNick;
 	this->cmdMap["USER"] = &Server::execUser;
-	this->cmdMap["PING"] = &Server::execPing;
-	this->cmdMap["PONG"] = &Server::execPong;
-	this->cmdMap["QUIT"] = &Server::execQuit;
 	this->cmdMap["JOIN"] = &Server::execJoin;
 	this->cmdMap["PART"] = &Server::execPart;
 	this->cmdMap["TOPIC"] = &Server::execTopic;
-	this->cmdMap["NAMES"] = &Server::execNames;
 	this->cmdMap["INVITE"] = &Server::execInvite;
 	this->cmdMap["KICK"] = &Server::execKick;
 	this->cmdMap["MODE"] = &Server::execMode;
 	this->cmdMap["PRIVMSG"] = &Server::execPrivmsg;
-	this->cmdMap["NOTICE"] = &Server::execNotice;
-	this->cmdMap["WHO"] = &Server::execWho;
-	this->cmdMap["WHOIS"] = &Server::execWhois;
 }
 
 void	Server::ascend()
@@ -121,7 +112,6 @@ void	Server::acceptClient()
 	std::cout << "New client connected with fd: " << new_fd << std::endl;
 }
 
-// /rawlog save /home/hqannouc/Internet-Relay-Chat/irc.log
 void	Server::processClient(int i)
 {
 	char 	tmp[1024] = {0};
