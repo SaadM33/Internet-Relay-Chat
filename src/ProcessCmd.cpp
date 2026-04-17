@@ -8,7 +8,7 @@ void	Server::processCmd(int fd, Message msg) {
 
 	if (needsRegistration(msg.command) && !this->clients[fd]->isRegistered)
 	{
-		send(fd, "MyServerName 451 :You have not registered\r\n", 44, 0);
+		send(fd, ":localhost 451 * :You have not registered\r\n", sizeof(":localhost 451 * :You have not registered\r\n") - 1, 0);
 		return ;
 	}
 
@@ -18,9 +18,5 @@ void	Server::processCmd(int fd, Message msg) {
 		(this->*(it->second))(fd, msg);
 	}
 	else
-	{
-		std::string errorMsg = "MyServerName 421" + this->clients[fd]->nickName + " " + msg.command + " :Unknown command\r\n";
-
-		send(fd, errorMsg.c_str(), errorMsg.size(), 0); //store the erorMsg later into the write buffer of client[fd]
-	}
+		sendReply(fd, "421", msg.command + " :Unknown command");
 }

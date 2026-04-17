@@ -54,7 +54,7 @@ NAME			= ircserv
 
 INCLUDES_SRCS	= Server.hpp Client.hpp
 
-SERVER_SRCS		= Server.cpp Parsing.cpp ProcessCmd.cpp Commands.cpp
+SERVER_SRCS		= Server.cpp Client.cpp Parsing.cpp ProcessCmd.cpp Commands.cpp
 
 CLIENT_SRCS		=
 

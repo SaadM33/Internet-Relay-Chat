@@ -3,12 +3,16 @@
 #include <iostream>
 #include <string>
 #include <exception>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+
 
 class Client
 {
 	public:
 
 		int			fd;
+		std::string	ip;
 
 		std::string	nickName;
 		std::string	userName;
@@ -21,7 +25,9 @@ class Client
 
 		std::string	r_buffer;
 
-		Client(int fd) : fd(fd), nickName(""), isRegistered(false), r_buffer("") {};
+		Client(int fd, sockaddr_in addr);
+
+		std::string	getPrefix();
 		
 
 };

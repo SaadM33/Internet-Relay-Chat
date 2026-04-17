@@ -106,7 +106,8 @@ void	Server::acceptClient()
 
 	fcntl(new_fd, F_SETFL, O_NONBLOCK);
 
-	this->clients[new_fd] = new Client(new_fd); // add the client addr later
+	this->clients[new_fd] = new Client(new_fd, cAddr);
+
 	this->poll_fds.push_back((pollfd){new_fd, POLLIN, 0});
 
 	std::cout << "New client connected with fd: " << new_fd << std::endl;
