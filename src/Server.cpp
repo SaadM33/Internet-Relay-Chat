@@ -18,9 +18,23 @@ Server::Server(int ac, char **av)
 	this->port = port;
 	this->passwd = passwd;
 	this->instantiateCmds();
+	this->instantiateReplies();
 }
 
-void    Server::instantiateCmds()
+void	Server::instantiateReplies() // function's change depends on the implementation of sendReply() function, but so far looks to be in its final form!
+{
+	this->replyMap[RPL_WELCOME] = std::make_pair("001", "Welcome to the IRC server Mortal!");
+	this->replyMap[ERR_UNKNOWNCOMMAND] =  std::make_pair("421", "Unknown command");
+	this->replyMap[ERR_NONICKNAMEGIVEN] =  std::make_pair("431", "No nickname given");
+	this->replyMap[ERR_ERRONEUSNICKNAME] =  std::make_pair("432", "Erroneous nickname");
+	this->replyMap[ERR_NICKNAMEINUSE] =  std::make_pair("433", "Nickname is already in use");
+	this->replyMap[ERR_NOTREGISTERED] = std::make_pair("451", "You have not registered");
+	this->replyMap[ERR_NEEDMOREPARAMS] =  std::make_pair("461", "Not enough parameters");
+	this->replyMap[ERR_ALREADYREGISTERED] =  std::make_pair("462", "You may not reregister");
+	this->replyMap[ERR_PASSWDMISMATCH] =  std::make_pair("464", "Password incorrect");
+}
+
+void	Server::instantiateCmds()
 {
 	this->cmdMap["CAP"] = &Server::execCap;
 	this->cmdMap["PASS"] = &Server::execPass;
@@ -119,10 +133,18 @@ void	Server::processClient(int i)
 	int		fd = poll_fds[i].fd;
 
 	int ret = recv(fd, tmp, sizeof(tmp), 0);
-	if (ret <= 0) {
-		this->disconnectClient(i, fd);
-		return ;
-	}
+	// The following implementation is encouraged because of the possible scenario of: ret == -1 && errno == EAGAIN
+	// EAGAIN is often raised when performing non-blocking I/O. It means "there is no data available right now, try again later". (source: https://stackoverflow.com/questions/4058368/what-does-eagain-mean)
+	if (ret == 0)
+		disconnectClient(i, fd); // clean close
+	else if (ret < 0 && errno != EAGAIN)
+		disconnectClient(i, fd); // real error
+	// if (ret <= 0)
+	// {
+	// 	this->disconnectClient(i, fd);
+	// 	return ;
+	// }
+
 	this->clients[fd]->r_buffer.append(tmp, ret);
 
 	this->handleInput(fd);
@@ -135,7 +157,8 @@ void	Server::disconnectClient(int i, int fd)
 	delete this->clients[fd];
 	this->clients.erase(fd);
 	c_banished = true;
-	
+	// One thing to note: if the client is a member of some channel they need to be deleted from that channel too to avoid having dangling pointers to deleted clients!
+
 	std::cout << "Client " << fd << " disconnected" << std::endl;
 }
  
