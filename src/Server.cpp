@@ -139,15 +139,16 @@ void	Server::processClient(int i)
 		disconnectClient(i, fd); // clean close
 	else if (ret < 0 && errno != EAGAIN)
 		disconnectClient(i, fd); // real error
+	else
+	{
+		this->clients[fd]->r_buffer.append(tmp, ret);	
+		this->handleInput(fd);
+	}
 	// if (ret <= 0)
 	// {
 	// 	this->disconnectClient(i, fd);
 	// 	return ;
 	// }
-
-	this->clients[fd]->r_buffer.append(tmp, ret);
-
-	this->handleInput(fd);
 }
 
 void	Server::disconnectClient(int i, int fd)
