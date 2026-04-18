@@ -59,28 +59,30 @@ bool	isAlnumStr(std::string str)
 
 void	Server::execCap(int fd, Message msg)
 {
-	if (msg.params.size() == 1 && msg.params[0] == "LS")
+	// condition changed from == 1 to >= 1 to allow handling inputs like CAP LS 302
+	if (msg.params.size() >= 1 && msg.params[0] == "LS")
 		// send(fd, ":localhost CAP * LS :\r\n", 23, 0);
 		sendReply(fd, RPL_CAP, false);
 }
 
 void	Server::execPass(int fd, Message msg)
 {
-	if (this->clients[fd]->isRegistered) {
-		// send(fd, ":localhost 462 :You may not reregister\r\n", 40, 0);
-		sendReply(fd, ERR_ALREADYREGISTERED, false);
-		return ;
-	}
 
 	if (msg.params.empty()) {
 		// send(fd, ":localhost 461 PASS :Not enough parameters\r\n", 44, 0);
-		sendReply(fd, ERR_NEEDMOREPARAMS, false);
+		sendReply(fd, ERR_NEEDMOREPARAMS, NICKNAME_EXIST_NOT);
+		return ;
+	}
+
+	if (this->clients[fd]->isRegistered) {
+		// send(fd, ":localhost 462 :You may not reregister\r\n", 40, 0);
+		sendReply(fd, ERR_ALREADYREGISTERED, NICKNAME_EXIST_NOT);
 		return ;
 	}
 
 	if (msg.params[0] != this->passwd) {
 		// send(fd, ":localhost 464 * :Password incorrect\r\n", 38, 0);
-		sendReply(fd, ERR_PASSWDMISMATCH, false);
+		sendReply(fd, ERR_PASSWDMISMATCH, NICKNAME_EXIST_NOT);
 		return ;
 	}
 	this->clients[fd]->has_pass = true;
@@ -90,26 +92,26 @@ void	Server::execNick(int fd, Message msg)
 {
 	if (msg.params.empty()) {
 		// sendReply(fd, "431", "No nickname given");
-		sendReply(fd, ERR_NONICKNAMEGIVEN, true);
+		sendReply(fd, ERR_NONICKNAMEGIVEN, NICKNAME_EXIST);
 		return ;
 	}
 
 	if (!isAlnumStr(msg.params[0])) {
 		// sendReply(fd, "432", "Erroneous nickname");
-		sendReply(fd, ERR_ERRONEUSNICKNAME, true);
+		sendReply(fd, ERR_ERRONEUSNICKNAME, NICKNAME_EXIST);
 		return ;
 	}
 
 	if (!isAvailable(this->clients, msg.params[0])) {
 		// sendReply(fd, "433", "Nickname is already in use");
-		sendReply(fd, ERR_NICKNAMEINUSE, true);
+		sendReply(fd, ERR_NICKNAMEINUSE, NICKNAME_EXIST);
 		return ;
 	}
 
 	if (!this->clients[fd]->isRegistered)
 	{
 		this->clients[fd]->nickName = msg.params[0];
-		this->clients[fd]->has_nick = true;
+		this->clients[fd]->has_nick = NICKNAME_EXIST;
 		registerClient(fd);
 	}
 	else
@@ -125,13 +127,13 @@ void	Server::execUser(int fd, Message msg)
 {
 	if (this->clients[fd]->isRegistered) {
 		// sendReply(fd, "462", "You may not reregister");
-		sendReply(fd, ERR_ALREADYREGISTERED, true);
+		sendReply(fd, ERR_ALREADYREGISTERED, NICKNAME_EXIST);
 		return ;
 	}
 
 	if (msg.params.size() < 3 || msg.trailing.empty()){
 		// sendReply(fd, "461", "USER :Not enough parameters");
-		sendReply(fd, ERR_NEEDMOREPARAMS, true);
+		sendReply(fd, ERR_NEEDMOREPARAMS, NICKNAME_EXIST);
 		return ;
 	}
 	this->clients[fd]->userName = msg.params[0];
@@ -146,7 +148,7 @@ void	Server::registerClient(int fd) {
 	{
 		clients[fd]->isRegistered = true;
 		// sendReply(fd, "001", "Welcome to the IRC server Mortal!");
-		sendReply(fd, RPL_WELCOME, false);
+		sendReply(fd, RPL_WELCOME, NICKNAME_EXIST_NOT);
 	}
 }
 

@@ -20,6 +20,9 @@
 #include <cstdio>
 #include <sstream>
 
+#define NICKNAME_EXIST_NOT 0
+#define NICKNAME_EXIST 1
+
 // Macros for server replies:
 #define RPL_CAP (000)
 #define RPL_WELCOME (001)
