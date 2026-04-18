@@ -7,14 +7,9 @@ static bool	needsRegistration(std::string command)
 
 void	Server::processCmd(int fd, Message msg)
 {
-	// if (needsRegistration(msg.command) && !this->clients[fd]->isRegistered)
-	// {
-		// send(fd, ":localhost 451 * :You have not registered\r\n", sizeof(":localhost 451 * :You have not registered\r\n") - 1, 0);
-		// return ;
-	// }
 	if (needsRegistration(msg.command) && !this->clients[fd]->isRegistered)
 	{
-		sendReply(fd, ERR_NOTREGISTERED, false);
+		sendReply(fd, ERR_NOTREGISTERED);
 		return ;
 	}
 
@@ -22,6 +17,5 @@ void	Server::processCmd(int fd, Message msg)
 	if (it != cmdMap.end())
 		(this->*(it->second))(fd, msg);
 	else
-		// sendReply(fd, "421", msg.command + " :Unknown command");
-		sendReply(fd, ERR_UNKNOWNCOMMAND, true);
+		sendReply(fd, ERR_UNKNOWNCOMMAND);
 }

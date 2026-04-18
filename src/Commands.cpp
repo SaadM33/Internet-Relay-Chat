@@ -1,42 +1,11 @@
 #include "Server.hpp"
 
-// std::string c_buffer;
-
-// void	Server::sendReply(int fd, std::string code, std::string message) 
-// {
-// 	std::string reply = ":localhost " + code + " " + this->clients[fd]->nickName + " :" + message + "\r\n";
-// 	send(fd, reply.c_str(), reply.size(), 0);
-// }
-
-void	Server::sendReply(int fd, int code, bool clientExist) // just a prototype for standardisation accross all sends
+void	Server::sendReply(int fd, std::string code)
 {
-	// these if-conditions make this function in DIRE need for change!!
 	std::string reply;
-	if (clientExist)
-	{
-		reply = ":localhost " + replyMap[code].first + " " + this->clients[fd]->nickName + " :" + replyMap[code].second + "\r\n";
-		send(fd, reply.c_str(), reply.size(), 0);
-	}
-	else
-	{
-		if (code == RPL_CAP)
-			send(fd, ":localhost CAP * LS :\r\n", 23, 0);
-		else if (code == ERR_NEEDMOREPARAMS)
-		{
-			reply = ":localhost " + replyMap[code].first + " PASS :" + replyMap[code].second + "\r\n";
-			send(fd, reply.c_str(), reply.size(), 0);
-		}
-		else if (code == ERR_PASSWDMISMATCH || code == ERR_NOTREGISTERED)
-		{
-			reply = ":localhost " + replyMap[code].first + " * :" + replyMap[code].second + "\r\n";
-			send(fd, reply.c_str(), reply.size(), 0);
-		}
-		else
-		{
-			reply = ":localhost " + replyMap[code].first + " :" + replyMap[code].second + "\r\n";
-			send(fd, reply.c_str(), reply.size(), 0);
-		}
-	}
+	reply = ":localhost " + code + " " + this->clients[fd]->nickName + " :" + replyMap[code] + "\r\n";
+	
+	send(fd, reply.c_str(), reply.size(), 0);	
 }
 
 bool	isAvailable(const std::map<int, Client *> &clients, std::string str)
@@ -59,30 +28,24 @@ bool	isAlnumStr(std::string str)
 
 void	Server::execCap(int fd, Message msg)
 {
-	// condition changed from == 1 to >= 1 to allow handling inputs like CAP LS 302
 	if (msg.params.size() >= 1 && msg.params[0] == "LS")
-		// send(fd, ":localhost CAP * LS :\r\n", 23, 0);
-		sendReply(fd, RPL_CAP, false);
+		send(fd, ":localhost CAP * LS :\r\n", 23, 0);
 }
 
 void	Server::execPass(int fd, Message msg)
 {
-
 	if (msg.params.empty()) {
-		// send(fd, ":localhost 461 PASS :Not enough parameters\r\n", 44, 0);
-		sendReply(fd, ERR_NEEDMOREPARAMS, NICKNAME_EXIST_NOT);
+		sendReply(fd, ERR_NEEDMOREPARAMS);
 		return ;
 	}
 
 	if (this->clients[fd]->isRegistered) {
-		// send(fd, ":localhost 462 :You may not reregister\r\n", 40, 0);
-		sendReply(fd, ERR_ALREADYREGISTERED, NICKNAME_EXIST_NOT);
+		sendReply(fd, ERR_ALREADYREGISTERED);
 		return ;
 	}
 
 	if (msg.params[0] != this->passwd) {
-		// send(fd, ":localhost 464 * :Password incorrect\r\n", 38, 0);
-		sendReply(fd, ERR_PASSWDMISMATCH, NICKNAME_EXIST_NOT);
+		sendReply(fd, ERR_PASSWDMISMATCH);
 		return ;
 	}
 	this->clients[fd]->has_pass = true;
@@ -91,27 +54,24 @@ void	Server::execPass(int fd, Message msg)
 void	Server::execNick(int fd, Message msg)
 {
 	if (msg.params.empty()) {
-		// sendReply(fd, "431", "No nickname given");
-		sendReply(fd, ERR_NONICKNAMEGIVEN, NICKNAME_EXIST);
+		sendReply(fd, ERR_NONICKNAMEGIVEN);
 		return ;
 	}
 
 	if (!isAlnumStr(msg.params[0])) {
-		// sendReply(fd, "432", "Erroneous nickname");
-		sendReply(fd, ERR_ERRONEUSNICKNAME, NICKNAME_EXIST);
+		sendReply(fd, ERR_ERRONEUSNICKNAME);
 		return ;
 	}
 
 	if (!isAvailable(this->clients, msg.params[0])) {
-		// sendReply(fd, "433", "Nickname is already in use");
-		sendReply(fd, ERR_NICKNAMEINUSE, NICKNAME_EXIST);
+		sendReply(fd, ERR_NICKNAMEINUSE);
 		return ;
 	}
 
 	if (!this->clients[fd]->isRegistered)
 	{
 		this->clients[fd]->nickName = msg.params[0];
-		this->clients[fd]->has_nick = NICKNAME_EXIST;
+		this->clients[fd]->has_nick = true;
 		registerClient(fd);
 	}
 	else
@@ -126,14 +86,12 @@ void	Server::execNick(int fd, Message msg)
 void	Server::execUser(int fd, Message msg)
 {
 	if (this->clients[fd]->isRegistered) {
-		// sendReply(fd, "462", "You may not reregister");
-		sendReply(fd, ERR_ALREADYREGISTERED, NICKNAME_EXIST);
+		sendReply(fd, ERR_ALREADYREGISTERED);
 		return ;
 	}
 
 	if (msg.params.size() < 3 || msg.trailing.empty()){
-		// sendReply(fd, "461", "USER :Not enough parameters");
-		sendReply(fd, ERR_NEEDMOREPARAMS, NICKNAME_EXIST);
+		sendReply(fd, ERR_NEEDMOREPARAMS);
 		return ;
 	}
 	this->clients[fd]->userName = msg.params[0];
@@ -143,12 +101,12 @@ void	Server::execUser(int fd, Message msg)
 	registerClient(fd);
 }
 
-void	Server::registerClient(int fd) {
+void	Server::registerClient(int fd)
+{
 	if (clients[fd]->has_nick && clients[fd]->has_user && clients[fd]->has_pass)
 	{
 		clients[fd]->isRegistered = true;
-		// sendReply(fd, "001", "Welcome to the IRC server Mortal!");
-		sendReply(fd, RPL_WELCOME, NICKNAME_EXIST_NOT);
+		sendReply(fd, RPL_WELCOME);
 	}
 }
 

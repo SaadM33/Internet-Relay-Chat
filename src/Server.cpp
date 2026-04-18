@@ -21,17 +21,25 @@ Server::Server(int ac, char **av)
 	this->instantiateReplies();
 }
 
-void	Server::instantiateReplies() // function's change depends on the implementation of sendReply() function, but so far looks to be in its final form!
+void	Server::instantiateReplies()
 {
-	this->replyMap[RPL_WELCOME] = std::make_pair("001", "Welcome to the IRC server Mortal!");
-	this->replyMap[ERR_UNKNOWNCOMMAND] =  std::make_pair("421", "Unknown command");
-	this->replyMap[ERR_NONICKNAMEGIVEN] =  std::make_pair("431", "No nickname given");
-	this->replyMap[ERR_ERRONEUSNICKNAME] =  std::make_pair("432", "Erroneous nickname");
-	this->replyMap[ERR_NICKNAMEINUSE] =  std::make_pair("433", "Nickname is already in use");
-	this->replyMap[ERR_NOTREGISTERED] = std::make_pair("451", "You have not registered");
-	this->replyMap[ERR_NEEDMOREPARAMS] =  std::make_pair("461", "Not enough parameters");
-	this->replyMap[ERR_ALREADYREGISTERED] =  std::make_pair("462", "You may not reregister");
-	this->replyMap[ERR_PASSWDMISMATCH] =  std::make_pair("464", "Password incorrect");
+	this->replyMap[RPL_WELCOME] = "Welcome to the IRC server Mortal!";
+	this->replyMap[ERR_UNKNOWNCOMMAND] =  "Unknown command";
+	this->replyMap[ERR_NONICKNAMEGIVEN] =  "No nickname given";
+	this->replyMap[ERR_ERRONEUSNICKNAME] =  "Erroneous nickname";
+	this->replyMap[ERR_NICKNAMEINUSE] =  "Nickname is already in use";
+	this->replyMap[ERR_NOTREGISTERED] = "You have not registered";
+	this->replyMap[ERR_NEEDMOREPARAMS] =  "Not enough parameters";
+	this->replyMap[ERR_ALREADYREGISTERED] =  "You may not reregister";
+	this->replyMap[ERR_PASSWDMISMATCH] =  "Password incorrect";
+	this->replyMap[ERR_CHANNELISFULL] =  "Channel is full";
+	this->replyMap[ERR_INVITEONLYCHAN] =  "Cannot join channel (+i)";
+	this->replyMap[ERR_BANNEDFROMCHAN] =  "Cannot join channel (+b)";
+	this->replyMap[ERR_BADCHANNELKEY] =  "Cannot join channel (+k)";
+	this->replyMap[ERR_BADCHANMASK] =  "Bad Channel Mask";
+	this->replyMap[ERR_CHANOPRIVSNEEDED] =  "You're not channel operator";
+	this->replyMap[ERR_UMODEUNKNOWNFLAG] =  "Unknown MODE flag";
+	this->replyMap[ERR_USERSDONTMATCH] =  "Cannot change mode for other users";
 }
 
 void	Server::instantiateCmds()
@@ -98,7 +106,7 @@ void	Server::ignite()
 				else
 					this->processClient(i);
 			}
-			if (poll_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) { 
+			else if (poll_fds[i].revents & (POLLERR | POLLHUP | POLLNVAL)) { 
 				this->disconnectClient(i, poll_fds[i].fd);
 				std::cout << "Error or hangup detected on client socket, disconnecting client." << std::endl;
 			}
@@ -133,22 +141,11 @@ void	Server::processClient(int i)
 	int		fd = poll_fds[i].fd;
 
 	int ret = recv(fd, tmp, sizeof(tmp), 0);
-	// The following implementation is encouraged because of the possible scenario of: ret == -1 && errno == EAGAIN
-	// EAGAIN is often raised when performing non-blocking I/O. It means "there is no data available right now, try again later". (source: https://stackoverflow.com/questions/4058368/what-does-eagain-mean)
-	if (ret == 0)
-		disconnectClient(i, fd); // clean close
-	else if (ret < 0 && errno != EAGAIN)
-		disconnectClient(i, fd); // real error
-	else
-	{
-		this->clients[fd]->r_buffer.append(tmp, ret);	
-		this->handleInput(fd);
-	}
-	// if (ret <= 0)
-	// {
-	// 	this->disconnectClient(i, fd);
-	// 	return ;
-	// }
+	if (ret <= 0)
+		disconnectClient(i, fd);
+
+	this->clients[fd]->r_buffer.append(tmp, ret);	
+	this->handleInput(fd);
 }
 
 void	Server::disconnectClient(int i, int fd)
