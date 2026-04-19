@@ -1,0 +1,20 @@
+<< JOIN #nAIMA,#qwerty
+>> :sel-maaq!~sel-maaq@197.230.48.178 JOIN #nAIMA
+>> :molybdenum.libera.chat MODE #nAIMA +Cnst
+>> :molybdenum.libera.chat 353 sel-maaq @ #nAIMA :@sel-maaq
+>> :molybdenum.libera.chat 366 sel-maaq #nAIMA :End of /NAMES list.
+<< MODE #nAIMA
+>> :molybdenum.libera.chat 477 sel-maaq #qwerty :Cannot join channel (+r) - you need to be logged into your NickServ account
+>> :molybdenum.libera.chat 324 sel-maaq #nAIMA +Cnst
+--> chanquery mode
+<< WHO #nAIMA
+>> :molybdenum.libera.chat 329 sel-maaq #nAIMA 1776551143
+--> event 329
+>> :molybdenum.libera.chat 352 sel-maaq #nAIMA ~sel-maaq 197.230.48.178 molybdenum.libera.chat sel-maaq H@ :0 Saad El Maaqili
+--> silent event who
+>> :molybdenum.libera.chat 315 sel-maaq #nAIMA :End of /WHO list.
+--> chanquery who end
+<< MODE #nAIMA b
+>> :molybdenum.libera.chat 368 sel-maaq #nAIMA :End of Channel Ban List
+--> chanquery ban end
+>> :sel-maaq_!~sel-maaq@197.230.48.178 JOIN #nAIMA

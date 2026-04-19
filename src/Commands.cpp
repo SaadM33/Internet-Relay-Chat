@@ -110,7 +110,17 @@ void	Server::registerClient(int fd)
 	}
 }
 
-void	Server::execJoin(int fd, Message msg) { (void)fd, (void)msg; }
+void	Server::execJoin(int fd, Message msg) // todo: handle multiple channels and keys, and send topic and names list
+{
+	if (msg.params.size() < 1)
+		sendReply(fd, ERR_NEEDMOREPARAMS);
+	(void)fd;
+	(void)msg;
+	// if 
+
+	// if (this->channels.find())
+	
+}
 
 void	Server::execPart(int fd, Message msg) { (void)fd, (void)msg; }
 
