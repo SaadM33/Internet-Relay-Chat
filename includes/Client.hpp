@@ -2,10 +2,10 @@
 
 #include <iostream>
 #include <string>
+#include <map>
 #include <exception>
 #include <netinet/in.h>
 #include <arpa/inet.h>
-
 
 class Client
 {

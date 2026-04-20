@@ -1,5 +1,14 @@
 #include "Server.hpp"
 
+int	getFdFromNick(const std::map<int, Client *> &clients, std::string str)
+{
+	for (std::map<int, Client*>::const_iterator it = clients.begin(); it != clients.end(); ++it) {
+		if (it->second->nickName == str)
+			return it->first;
+	}
+	return -1;
+}
+
 void	Server::execCap(int fd, Message msg)
 {
 	if (msg.params.size() >= 1 && msg.params[0] == "LS")
@@ -37,7 +46,7 @@ void	Server::execNick(int fd, Message msg)
 		return ;
 	}
 
-	if (!isAvailable(this->clients, msg.params[0])) {
+	if (getFdFromNick(this->clients, msg.params[0]) != -1) {
 		sendReply(fd, ERR_NICKNAMEINUSE);
 		return ;
 	}
@@ -96,19 +105,222 @@ void	Server::execJoin(int fd, Message msg) // todo: handle multiple channels and
 	
 }
 
-void	Server::execPart(int fd, Message msg)
+std::string	Channel::modeI(bool modeSwitch, modeBroadcast& brdcst)
 {
-	(void)fd;
-	(void)msg;
+	if (modeSwitch && !this->isInviteOnly) {
+		this->isInviteOnly = true;
+		brdcst.modes += "i";
+	}
+	else if (!modeSwitch && this->isInviteOnly) {
+		this->isInviteOnly = false;
+		brdcst.modes += ("i");
+	}
+
+	return "";
 }
+
+std::string	Channel::modeK(bool modeSwitch, std::string newKey, modeBroadcast& brdcst)
+{
+	if (newKey.empty())
+		return "";
+
+	if (modeSwitch) {
+		this->key = newKey;
+		if (!this->isKeySet) {
+			this->isKeySet = true;
+			brdcst.modes += "k";
+			brdcst.args += " " + newKey;
+		}
+	}
+	else {
+		this->key = "";
+		if (this->isKeySet) {
+			this->isKeySet = false;
+			brdcst.modes += "k";
+			brdcst.args += " *";
+		}
+	}
+
+	return "";
+}
+
+bool	isPositiveInt(const std::string &str)
+{
+	size_t i = 0;
+
+	if (str.empty())
+		return false;
+
+	if (str[i] == '+')
+		i++;
+
+	while (i < str.size()){
+		if (!isdigit(str[i]))
+			return false;
+		i++;
+	}
+
+	return true;
+}
+
+std::string	Channel::modeL(bool modeSwitch, std::string newLim, size_t &paramIndex, modeBroadcast& brdcst)
+{
+	if (modeSwitch) {
+		if (isPositiveInt(newLim)) {
+			std::stringstream ss(newLim);
+			ss >> this->membersLimit;
+			brdcst.modes += "l";
+			brdcst.args += " " + newLim;
+		}
+		paramIndex++;
+	}
+	else {
+		if (this->membersLimit != -1) {
+			this->membersLimit = -1;
+			brdcst.modes += "l";
+		}
+	}
+	
+	return "";
+}
+
+std::string	Channel::modeO(bool modeSwitch, std::string targetNick, modeBroadcast& brdcst)
+{
+	if (targetNick.empty())
+		return "";
+	
+	int targetFd = getFdFromNick(this->members, targetNick);
+	if (members.find(targetFd) == members.end())
+		return ERR_USERNOTINCHANNEL;
+
+	if (modeSwitch) {
+		if (operators.find(targetFd) != operators.end())
+			return "";
+		operators[targetFd] = members[targetFd];
+		brdcst.modes += "o";
+		brdcst.args += " " + targetNick;
+	}
+	else {
+		if (operators.find(targetFd) == operators.end())
+			return "";
+		operators.erase(targetFd);
+		brdcst.modes += "o";
+		brdcst.args += " " + targetNick;
+	}
+	return "";
+}
+
+std::string	Channel::modeT(bool modeSwitch, modeBroadcast& brdcst)
+{
+	if (modeSwitch && !topicRestricted) {
+		topicRestricted = true;
+		brdcst.modes += "t";
+	}
+	else if (!modeSwitch && topicRestricted) {
+		topicRestricted = false;
+		brdcst.modes += "t";
+	}
+
+	return "";
+}
+
+void	Server::execMode(int fd, Message msg)
+{
+	if (msg.params.size() < 1) {
+		sendReply(fd, ERR_NEEDMOREPARAMS);
+		return ;
+	}
+
+	std::string		name = msg.params[0];
+
+	if (channels.find(name) == channels.end()) {
+		sendReply(fd, ERR_NOSUCHCHANNEL);
+		return ;
+	}
+
+	if (channels[name]->members.find(fd) == channels[name]->members.end()) {
+		sendReply(fd, ERR_NOTONCHANNEL); 	
+		return ;
+	}
+
+	if (channels[name]->operators.find(fd) == channels[name]->operators.end()) {
+		sendReply(fd, ERR_CHANOPRIVSNEEDED);
+		return ;
+	}
+
+	if (msg.params.size() == 1) {
+		sendReply(fd, RPL_CHANNELMODEIS);
+		return ;
+	}
+
+	if (msg.params[1].empty() || (msg.params[1][0] != '+' && msg.params[1][0] != '-'))
+		return ;
+
+	std::string		modeStr = msg.params[1];
+	modeBroadcast	brdcst;
+	bool			modeSwitch = true;
+	size_t			paramIndex = 2;
+
+	for (size_t i = 0; i < modeStr.size(); i++)
+	{
+		std::string	replyCode = "";
+		std::string arg = "";
+		if (paramIndex < msg.params.size())
+			arg = msg.params[paramIndex];
+		
+		switch (modeStr[i]) {
+			case '+':
+				if (modeSwitch == false || brdcst.modes.empty()) {
+					modeSwitch = true;
+					brdcst.modes += "+";
+				}
+				break ;
+	
+			case '-':
+				if (modeSwitch == true || brdcst.modes.empty()) {
+					modeSwitch = false;
+					brdcst.modes += "-";
+				}
+				break ;
+	
+			case 'i':
+				replyCode = channels[name]->modeI(modeSwitch, brdcst);
+				break ;
+
+			case 'k':
+				replyCode = channels[name]->modeK(modeSwitch, arg, brdcst);
+				paramIndex++;
+				break ;
+
+			case 'l':
+				replyCode = channels[name]->modeL(modeSwitch, arg, paramIndex, brdcst);
+				break ;
+
+			case 'o':
+				replyCode = channels[name]->modeO(modeSwitch, arg, brdcst);
+				paramIndex++;
+				break ;
+
+			case 't':
+				replyCode = channels[name]->modeT(modeSwitch, brdcst);
+				break ;
+
+			default :
+				brdcst.unknown += modeStr[i];
+		}
+
+		if (!replyCode.empty())
+			sendReply(fd, replyCode);
+	}
+}
+
+void	Server::execPart(int fd, Message msg) { (void)fd, (void)msg; }
 
 void	Server::execTopic(int fd, Message msg) { (void)fd, (void)msg; }
 
 void	Server::execInvite(int fd, Message msg) { (void)fd, (void)msg; }
 
 void	Server::execKick(int fd, Message msg) { (void)fd, (void)msg; }
-
-void	Server::execMode(int fd, Message msg) { (void)fd, (void)msg; }
 
 void	Server::execPrivmsg(int fd, Message msg)
 {

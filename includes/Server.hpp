@@ -29,6 +29,7 @@ class Server
 
 		void	instantiateCmds();
 		void	instantiateReplies();
+
 		void	ascend();
 		void	ignite();
 		

@@ -2,19 +2,35 @@
 #include <iostream>
 #include <vector>
 
+
+typedef struct s_modeBroadcast {
+	std::string modes;
+	std::string args;
+	std::string unknown;
+} modeBroadcast;
+
 class Channel
 {
-
 	public:
 		std::string				name;
 		std::string				topic;
 		std::string				key;
 
-		std::vector<Client *>	clients;
-		std::vector<Client *>	operators;
+		bool					isInviteOnly;
+		bool					isKeySet;
+		bool					topicRestricted;
+		int						membersLimit;
 
-		Channel(std::string name, std::string key = "", std::string topic = "") : name(name), topic(topic), key(key) {}
+		std::map<int, Client *>	members;
+		std::map<int, Client *>	operators;
 
+		Channel(std::string name, std::string key = "", std::string topic = "") : name(name), topic(topic), key(key), isInviteOnly(false) {}
 
+		std::string	modeI(bool, modeBroadcast&);
+		std::string	modeK(bool, std::string, modeBroadcast&);
+		std::string	modeL(bool, std::string, size_t&, modeBroadcast&);
+		std::string	modeO(bool, std::string, modeBroadcast&);
+		std::string	modeT(bool, modeBroadcast&);
+
+		void broadcast(int fd, std::string& message, int exile_fd = -1);
 };
-
