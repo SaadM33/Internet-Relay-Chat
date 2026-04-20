@@ -1,7 +1,5 @@
-
 #pragma once
 
-// I advise creating a new file cuz im chamali and shi
 #include <iostream>
 #include <vector>
 #include <map>
@@ -19,7 +17,7 @@
 #include <cstdio>
 #include <sstream>
 
-// Macros for server replies:
+// Macros:
 #define RPL_CAP "000"
 #define RPL_WELCOME "001"
 #define RPL_UMODEIS "221"
@@ -33,7 +31,6 @@
 #define RPL_NAMREPLY "353"
 #define RPL_ENDOFNAMES "366"
 #define ERR_NOSUCHNICK "401"
-#define ERR_NOSUCHSERVER "402"
 #define ERR_NOSUCHCHANNEL "403"
 #define ERR_CANNOTSENDTOCHAN "404"
 #define ERR_TOOMANYCHANNELS "405"
@@ -59,3 +56,23 @@
 #define ERR_CHANOPRIVSNEEDED "482"
 #define ERR_UMODEUNKNOWNFLAG "501"
 #define ERR_USERSDONTMATCH "502"
+
+// classes
+
+class Server;
+class Client;
+class Channel;
+
+// util structs
+
+typedef struct s_msg {
+    std::string					command;
+	std::vector<std::string> 	params;
+	std::string					trailing;
+}	Message;
+
+// util functions
+
+typedef void (Server::*cmdHandler)(int, Message);
+bool	isAvailable(const std::map<int, Client *> &clients, std::string str);
+bool	isAlnumStr(std::string str);

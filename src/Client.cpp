@@ -1,6 +1,5 @@
 #include "Client.hpp"
 
-
 Client::Client(int fd, sockaddr_in addr)
 {
 	this->fd = fd;

@@ -24,6 +24,7 @@ Server::Server(int ac, char **av)
 void	Server::instantiateReplies()
 {
 	this->replyMap[RPL_WELCOME] = "Welcome to the IRC server Mortal!";
+	this->replyMap[ERR_NOSUCHNICK] = "No such nick/channel";
 	this->replyMap[ERR_UNKNOWNCOMMAND] =  "Unknown command";
 	this->replyMap[ERR_NONICKNAMEGIVEN] =  "No nickname given";
 	this->replyMap[ERR_ERRONEUSNICKNAME] =  "Erroneous nickname";
@@ -40,6 +41,7 @@ void	Server::instantiateReplies()
 	this->replyMap[ERR_CHANOPRIVSNEEDED] =  "You're not channel operator";
 	this->replyMap[ERR_UMODEUNKNOWNFLAG] =  "Unknown MODE flag";
 	this->replyMap[ERR_USERSDONTMATCH] =  "Cannot change mode for other users";
+	this->replyMap[ERR_NOTEXTTOSEND] = "No text to send";
 }
 
 void	Server::instantiateCmds()
@@ -142,7 +144,10 @@ void	Server::processClient(int i)
 
 	int ret = recv(fd, tmp, sizeof(tmp), 0);
 	if (ret <= 0)
+	{
 		disconnectClient(i, fd);
+		return ;
+	}
 
 	this->clients[fd]->r_buffer.append(tmp, ret);	
 	this->handleInput(fd);
@@ -159,4 +164,11 @@ void	Server::disconnectClient(int i, int fd)
 
 	std::cout << "Client " << fd << " disconnected" << std::endl;
 }
- 
+
+void	Server::sendReply(int fd, std::string code)
+{
+	std::string reply;
+	reply = ":localhost " + code + " " + this->clients[fd]->nickName + " :" + replyMap[code] + "\r\n";
+	
+	send(fd, reply.c_str(), reply.size(), 0);	
+}

@@ -2,20 +2,13 @@
 
 #include "Channel.hpp"
 #include "Client.hpp"
-#include "Placeholder.hpp"
+#include "utils.hpp"
 
-typedef struct s_msg {
-	std::string					command;
-	std::vector<std::string> 	params;
-	std::string					trailing;
-}	Message;
-
-class Server;
-typedef void (Server::*cmdHandler)(int, Message);
 
 class Server
 {
 	private:
+
 		int									port;
 		std::string							passwd;
 
@@ -60,7 +53,5 @@ class Server
 		void	execMode(int, Message);
 		void	execPrivmsg(int, Message);
 
-		// void	sendReply(int fd, std::string code, std::string message);
 		void	sendReply(int fd, std::string code);
-
 };

@@ -7,6 +7,7 @@ static bool	needsRegistration(std::string command)
 
 void	Server::processCmd(int fd, Message msg)
 {
+	//removed temporarily for a simpler testing flow
 	if (needsRegistration(msg.command) && !this->clients[fd]->isRegistered)
 	{
 		sendReply(fd, ERR_NOTREGISTERED);

@@ -58,7 +58,7 @@ SERVER_SRCS		= Server.cpp Client.cpp Parsing.cpp ProcessCmd.cpp Commands.cpp
 
 CLIENT_SRCS		=
 
-UTILS_SRCS		=
+UTILS_SRCS		= utils.cpp
 
 HEADER_FILE		= $(addprefix $(INCLUDES_DIR)/, $(INCLUDES_SRCS))
 

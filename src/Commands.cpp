@@ -1,31 +1,5 @@
 #include "Server.hpp"
 
-void	Server::sendReply(int fd, std::string code)
-{
-	std::string reply;
-	reply = ":localhost " + code + " " + this->clients[fd]->nickName + " :" + replyMap[code] + "\r\n";
-	
-	send(fd, reply.c_str(), reply.size(), 0);	
-}
-
-bool	isAvailable(const std::map<int, Client *> &clients, std::string str)
-{
-	for (std::map<int, Client*>::const_iterator it = clients.begin(); it != clients.end(); ++it) {
-		if (it->second->nickName == str)
-			return false;
-	}
-	return true;
-}
-
-bool	isAlnumStr(std::string str)
-{
-	for (size_t i = 0; i < str.size(); i++) {
-		if (!isalnum(str[i]) && str[i] != '-' && str[i] != '_')
-			return false;
-	}
-	return true;
-}
-
 void	Server::execCap(int fd, Message msg)
 {
 	if (msg.params.size() >= 1 && msg.params[0] == "LS")
@@ -122,7 +96,11 @@ void	Server::execJoin(int fd, Message msg) // todo: handle multiple channels and
 	
 }
 
-void	Server::execPart(int fd, Message msg) { (void)fd, (void)msg; }
+void	Server::execPart(int fd, Message msg)
+{
+	(void)fd;
+	(void)msg;
+}
 
 void	Server::execTopic(int fd, Message msg) { (void)fd, (void)msg; }
 
@@ -132,5 +110,33 @@ void	Server::execKick(int fd, Message msg) { (void)fd, (void)msg; }
 
 void	Server::execMode(int fd, Message msg) { (void)fd, (void)msg; }
 
-void	Server::execPrivmsg(int fd, Message msg) { (void)fd, (void)msg; }
-
+void	Server::execPrivmsg(int fd, Message msg)
+{
+	for (std::map<int, Client *>::iterator it = this->clients.begin(); it != this->clients.end(); it++)
+	{
+		if (msg.trailing.empty())
+			sendReply(fd, ERR_NOTEXTTOSEND);
+		if ((*it).second->nickName == msg.params.at(0))
+		{
+			std::cout << "User exists with name: "
+			<< (*it).second->userName << " who'll receive: " << msg.trailing
+			<< std::endl;
+			std::string reply(msg.trailing + "\r\n");
+			send((*it).second->fd, reply.c_str(), reply.size(), 0);
+			return ;
+		}
+		else if (msg.params[0][0] == '#')
+		{
+			std::cout << "This is a channel's name"
+			<< std::endl;
+			return ;
+		}
+		else if (msg.params[0][0] == '@')
+		{
+			std::cout << "This is for operators of a channel"
+			<< std::endl;
+			return ;
+		}
+	}
+	this->sendReply(fd, ERR_NOSUCHNICK);
+}
