@@ -36,6 +36,7 @@ class Server
 
 		void	instantiateCmds();
 		void	instantiateReplies();
+
 		void	ascend();
 		void	ignite();
 		
@@ -60,7 +61,6 @@ class Server
 		void	execMode(int, Message);
 		void	execPrivmsg(int, Message);
 
-		// void	sendReply(int fd, std::string code, std::string message);
 		void	sendReply(int fd, std::string code);
 
 };
