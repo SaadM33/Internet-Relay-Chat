@@ -42,6 +42,7 @@ void	Server::instantiateReplies()
 	this->replyMap[ERR_UMODEUNKNOWNFLAG] =  "Unknown MODE flag";
 	this->replyMap[ERR_USERSDONTMATCH] =  "Cannot change mode for other users";
 	this->replyMap[ERR_NOTEXTTOSEND] = "No text to send";
+	this->replyMap[ERR_NOSUCHCHANNEL] = "No such channel";
 }
 
 void	Server::instantiateCmds()

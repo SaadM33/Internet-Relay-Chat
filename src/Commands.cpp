@@ -93,15 +93,71 @@ void	Server::registerClient(int fd)
 	}
 }
 
-void	Server::execJoin(int fd, Message msg) // todo: handle multiple channels and keys, and send topic and names list
+void	CommasBegone(std::vector<std::string> &chs, std::vector<std::string> &keys, std::vector<std::string> &params)
+{
+	std::stringstream ss(params[0]);
+	std::string item;
+
+	while (std::getline(ss, item, ','))
+		chs.push_back(item);
+	
+	if (params.size() > 1)
+	{
+		std::stringstream ss2(params[1]);
+		while (std::getline(ss2, item, ',')) // if we have "key1,key2" and 3 channels, we will have "key1,key2,key2" 
+			keys.push_back(item);
+	}
+}
+
+void	Server::execJoin(int fd, Message msg)
 {
 	if (msg.params.size() < 1)
+	{
 		sendReply(fd, ERR_NEEDMOREPARAMS);
-	(void)fd;
-	(void)msg;
-	// if 
+		return ;
+	}
 
-	// if (this->channels.find())
+	std::vector<std::string>	ch_names;
+	std::vector<std::string>	keys;
+	CommasBegone(ch_names, keys, msg.params);
+
+	for (size_t i = 0; i < ch_names.size(); i++)
+	{
+		std::string name = ch_names[i];
+
+		if (name.empty() || name[0] != '#')
+		{
+			sendReply(fd, ERR_NOSUCHCHANNEL);
+			continue ;
+		}
+		if (channels.find(name) == channels.end())
+		{
+			Channel *new_Ch = new Channel(name);
+			channels[name] = new_Ch;
+
+			new_Ch->addClient(clients[fd]);
+		}
+		else
+		{
+			if (channels[name]->isInviteOnly && !channels[name]->InInviteList(fd))
+			{
+				sendReply(fd, ERR_INVITEONLYCHAN);
+				continue ;
+			}
+			if (channels[name]->isKeySet && (i >= keys.size() || keys[i].empty() || keys[i] != channels[name]->key))
+			{
+				sendReply(fd, ERR_BADCHANNELKEY);
+				continue ;
+			}
+			if (channels[name]->members.size() == (size_t)channels[name]->membersLimit)
+			{
+				sendReply(fd, ERR_CHANNELISFULL);
+				continue ;
+			}
+			channels[name]->addClient(clients[fd]);
+		}
+	}
+
 	
 }
 
