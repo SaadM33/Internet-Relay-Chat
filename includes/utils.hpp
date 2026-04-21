@@ -21,7 +21,6 @@
 #define RPL_CAP "000"
 #define RPL_WELCOME "001"
 #define RPL_UMODEIS "221"
-#define RPL_AWAY "301"
 #define RPL_CHANNELMODEIS "324"
 #define RPL_CREATIONTIME "329"
 #define RPL_NOTOPIC "331"

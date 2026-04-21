@@ -42,6 +42,8 @@ void	Server::instantiateReplies()
 	this->replyMap[ERR_UMODEUNKNOWNFLAG] =  "Unknown MODE flag";
 	this->replyMap[ERR_USERSDONTMATCH] =  "Cannot change mode for other users";
 	this->replyMap[ERR_NOTEXTTOSEND] = "No text to send";
+	// ERR_NORECIPIENT to be modified to accept different commands!!!
+	this->replyMap[ERR_NORECIPIENT] = "No recipient given (PRIVMSG)";
 }
 
 void	Server::instantiateCmds()

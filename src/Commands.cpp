@@ -324,31 +324,68 @@ void	Server::execKick(int fd, Message msg) { (void)fd, (void)msg; }
 
 void	Server::execPrivmsg(int fd, Message msg)
 {
+	if (msg.params.empty())
+	{
+		this->sendReply(fd, ERR_NORECIPIENT);
+		return ;
+	}
+	else if (msg.trailing.empty())
+	{
+		sendReply(fd, ERR_NOTEXTTOSEND);
+		return ;
+	}
 	for (std::map<int, Client *>::iterator it = this->clients.begin(); it != this->clients.end(); it++)
 	{
-		if (msg.trailing.empty())
-			sendReply(fd, ERR_NOTEXTTOSEND);
 		if ((*it).second->nickName == msg.params.at(0))
 		{
-			std::cout << "User exists with name: "
-			<< (*it).second->userName << " who'll receive: " << msg.trailing
-			<< std::endl;
-			std::string reply(msg.trailing + "\r\n");
+			// :senderNick!user@host PRIVMSG <target> :<text>\r\n
+			std::string reply = ":" + this->clients[fd]->nickName
+			+ "!" + this->clients[fd]->userName
+			+ "@localhost PRIVMSG " + msg.params.at(0)
+			+ " :" + msg.trailing + "\r\n";
+			std::cout << reply << std::endl;
+			// std::string reply(msg.trailing + "\r\n");
 			send((*it).second->fd, reply.c_str(), reply.size(), 0);
-			return ;
-		}
-		else if (msg.params[0][0] == '#')
-		{
-			std::cout << "This is a channel's name"
-			<< std::endl;
-			return ;
-		}
-		else if (msg.params[0][0] == '@')
-		{
-			std::cout << "This is for operators of a channel"
-			<< std::endl;
 			return ;
 		}
 	}
 	this->sendReply(fd, ERR_NOSUCHNICK);
 }
+	// 	// :irc.server 411 clientNick :No recipient given (PRIVMSG)
+	// 	//    Triggered when the PRIVMSG command is sent with no target at all.
+	// 	//    Examples:
+	// 	//    PRIVMSG
+	// 	//    PRIVMSG :hello
+	// 	this->sendReply(fd, ERR_NORECIPIENT); 
+	//----------------------------------------------------------------------
+
+	// 	// :irc.server 412 clientNick :No text to send
+	// 	//    Triggered when a target is given but the message body is empty
+	// 	//    or missing entirely.
+	// 	//    Examples:
+	// 	//    PRIVMSG Wiz
+	// 	//    PRIVMSG #general :
+	// 	this->sendReply(fd, ERR_NOTEXTTOSEND);
+	//----------------------------------------------------------------------
+
+	// 	// :irc.server 401 clientNick Wiz :No such nick/channel
+	// 	//    Triggered when the target nickname or channel does not exist
+	// 	//    on the server.
+	// 	//    Examples:
+	// 	//    PRIVMSG Wiz :hello        ; Wiz is not connected
+	// 	//    PRIVMSG #general :hello   ; #general does not exist
+	// 	this->sendReply(fd, ERR_NOSUCHNICK);
+	//----------------------------------------------------------------------
+
+	// 	// :irc.server 404 clientNick #general :Cannot send to channel
+	// 	//    Triggered when the sender is not permitted to send to the channel.
+	// 	//    This covers two cases:
+	// 	//          - The channel has mode +m set and the sender is neither
+	// 	//            a channel operator nor voiced (+v).
+	// 	//          - The sender is banned (+b) from the channel and is not
+	// 	//            covered by a ban exception (+e).
+	// 	//    Examples:
+	// 	//    PRIVMSG #general :hello   ; sender is banned from #general
+	// 	//    PRIVMSG #general :hello   ; #general is +m and sender has no voice
+	// 	this->sendReply(fd, ERR_CANNOTSENDTOCHAN);
+	//----------------------------------------------------------------------
