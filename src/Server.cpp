@@ -44,6 +44,7 @@ void	Server::instantiateReplies()
 	this->replyMap[ERR_NOTEXTTOSEND] = "No text to send";
 	// ERR_NORECIPIENT to be modified to accept different commands!!!
 	this->replyMap[ERR_NORECIPIENT] = "No recipient given (PRIVMSG)";
+	this->replyMap[ERR_NOSUCHCHANNEL] = "No such channel";
 }
 
 void	Server::instantiateCmds()

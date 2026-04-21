@@ -1,11 +1,13 @@
 #pragma once
 
+#include "Channel.hpp"
 #include <iostream>
 #include <string>
 #include <map>
 #include <exception>
 #include <netinet/in.h>
 #include <arpa/inet.h>
+#include <map>
 
 class Client
 {
@@ -22,6 +24,8 @@ class Client
 		bool		has_pass;
 		bool		has_nick;
 		bool		has_user;
+
+		std::map<std::string, Channel *> channels;
 
 		std::string	r_buffer;
 
