@@ -53,6 +53,14 @@ void	Channel::addClient(Client *client)
 	send(client->fd, message.c_str(), message.size(), 0);
 
 	message = ":localhost 366 " + client->nickName + " " + name + " :End of NAMES list\r\n";
-	send(client->fd, message.c_str(), message.size(), 0);
-		
+	send(client->fd, message.c_str(), message.size(), 0);		
+}
+
+void	Channel::removeClient(Client *client)
+{
+	operators.erase(client->fd);
+	members.erase(client->fd);
+	
+	client->channels.erase(name);
+	
 }
