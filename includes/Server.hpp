@@ -53,6 +53,7 @@ class Server
 		void	execKick(int, Message);
 		void	execMode(int, Message);
 		void	execPrivmsg(int, Message);
+		void	execPing(int, Message);
 
 		void	sendReply(int fd, std::string code);
 };

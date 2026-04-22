@@ -25,7 +25,7 @@ void	Server::instantiateReplies()
 {
 	this->replyMap[RPL_WELCOME] = "Welcome to the IRC server Mortal!";
 	this->replyMap[ERR_NOSUCHNICK] = "No such nick/channel";
-	this->replyMap[ERR_UNKNOWNCOMMAND] =  "Unknown command";
+	this->replyMap[ERR_UNKNOWNCOMMAND] =  "Command beyond comprehension";  
 	this->replyMap[ERR_NONICKNAMEGIVEN] =  "No nickname given";
 	this->replyMap[ERR_ERRONEUSNICKNAME] =  "Erroneous nickname";
 	this->replyMap[ERR_NICKNAMEINUSE] =  "Nickname is already in use";
@@ -45,6 +45,7 @@ void	Server::instantiateReplies()
 	// ERR_NORECIPIENT to be modified to accept different commands!!!
 	this->replyMap[ERR_NORECIPIENT] = "No recipient given (PRIVMSG)";
 	this->replyMap[ERR_NOSUCHCHANNEL] = "No such channel";
+	this->replyMap[ERR_NOORIGIN] = "No origin specified";
 }
 
 void	Server::instantiateCmds()
@@ -60,6 +61,7 @@ void	Server::instantiateCmds()
 	this->cmdMap["KICK"] = &Server::execKick;
 	this->cmdMap["MODE"] = &Server::execMode;
 	this->cmdMap["PRIVMSG"] = &Server::execPrivmsg;
+	this->cmdMap["PING"] = &Server::execPing;
 }
 
 void	Server::ascend()
