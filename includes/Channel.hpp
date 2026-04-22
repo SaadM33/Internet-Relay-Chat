@@ -41,6 +41,6 @@ class Channel
 		void	addClient(Client *client);
 
 		bool	InInviteList(int fd);
-		void	broadcast(Client *client, std::string& message, int forsake_fd);
+		void	broadcast(Client *client, std::string& message);
 };
 

@@ -59,10 +59,13 @@ void	Server::execNick(int fd, Message msg)
 	}
 	else
 	{
-		std::string brdcst = this->clients[fd]->getPrefix() + " NICK :" + msg.params[0] + "\r\n";
-
-		send(fd, brdcst.c_str(), brdcst.size(), 0); // send broadcast to all clients in the same channels as fd
-		this->clients[fd]->nickName = msg.params[0];
+		std::string brdcst = "NICK :" + msg.params[0] + "\r\n";
+		
+		std::map<std::string, Channel *>::iterator it;
+		for (it = clients[fd]->channels.begin(); it != clients[fd]->channels.end(); it++)
+			it->second->broadcast(clients[fd], brdcst);
+		
+		clients[fd]->nickName = msg.params[0];
 	}
 }
 

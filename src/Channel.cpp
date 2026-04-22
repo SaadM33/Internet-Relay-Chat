@@ -1,7 +1,7 @@
 #include "Channel.hpp"
 #include "Client.hpp"
 
-void	Channel::broadcast(Client *client, std::string& message, int forsake_fd = 0)
+void	Channel::broadcast(Client *client, std::string& message)
 {
 	std::string							str;
 	std::map<int,Client *>::iterator	it;
@@ -9,9 +9,6 @@ void	Channel::broadcast(Client *client, std::string& message, int forsake_fd = 0
 	std::string prefix = client->getPrefix();
 	for (it = members.begin(); it != members.end(); it++)
 	{
-		if (forsake_fd && it->first == forsake_fd)
-			continue;
-		
 		str = prefix + " " + message;
 		send(it->first, str.c_str(), str.size(), 0);
 	}

@@ -1,0 +1,14 @@
+nick:
+	fix duplicate broadcast for repeated client in channels
+
+part: 
+	implement
+
+mode: 
+	fix the goddamn response when no args given a lmlawi
+
+
+
+general:
+	- add PING ?
+	- handle when a client disconnects , aka remove self from channels and shi,
