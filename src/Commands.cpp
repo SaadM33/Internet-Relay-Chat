@@ -411,8 +411,48 @@ void	Server::execPart(int fd, Message msg)
 	}
 }
 
-void	Server::execTopic(int fd, Message msg) { (void)fd, (void)msg; }
+void	Server::execTopic(int fd, Message msg)
+{
+	if (msg.params.size() < 1) {
+		sendReply(fd, ERR_NEEDMOREPARAMS);
+		return;
+	}
+	std::string	name_ch = msg.params[0];
 
+	if (channels.find(name_ch) == channels.end()) {
+		sendReply(fd, ERR_NOSUCHCHANNEL);
+		return ;
+	}
+	if (clients[fd]->channels.find(name_ch) == clients[fd]->channels.end()) {
+		sendReply(fd, ERR_NOTONCHANNEL);
+		return ;
+	}
+
+	Channel	*chan = channels[name_ch];
+
+	if (msg.trailing.empty())
+	{
+		if (chan->topic.empty())
+			sendReply(fd, RPL_NOTOPIC);
+		else
+		{
+			std::string reply = ":localhost 332 " + clients[fd]->nickName + " " + name_ch;
+			reply += " :" + chan->topic + "\r\n";
+			send(fd, reply.c_str(), reply.size(), 0);
+		}
+	}
+	else
+	{
+		if (chan->topicRestricted && chan->operators.find(fd) == chan->operators.end())
+			sendReply(fd, ERR_CHANOPRIVSNEEDED);
+		else
+		{
+			chan->topic = msg.trailing;
+			std::string	reply = "TOPIC " + name_ch + " :" + msg.trailing + "\r\n";
+			chan->broadcast(clients[fd], reply);
+		}
+	}
+}
 void	Server::execInvite(int fd, Message msg) { (void)fd, (void)msg; }
 
 void	Server::execKick(int fd, Message msg) { (void)fd, (void)msg; }
@@ -453,7 +493,6 @@ void	Server::execPrivmsg(int fd, Message msg)
 	// 	//    PRIVMSG :hello
 	// 	this->sendReply(fd, ERR_NORECIPIENT); 
 	//----------------------------------------------------------------------
-
 	// 	// :irc.server 412 clientNick :No text to send
 	// 	//    Triggered when a target is given but the message body is empty
 	// 	//    or missing entirely.
@@ -462,16 +501,14 @@ void	Server::execPrivmsg(int fd, Message msg)
 	// 	//    PRIVMSG #general :
 	// 	this->sendReply(fd, ERR_NOTEXTTOSEND);
 	//----------------------------------------------------------------------
-
 	// 	// :irc.server 401 clientNick Wiz :No such nick/channel
 	// 	//    Triggered when the target nickname or channel does not exist
-	// 	//    on the server.
+	// 	//    on the server.chan
 	// 	//    Examples:
 	// 	//    PRIVMSG Wiz :hello        ; Wiz is not connected
 	// 	//    PRIVMSG #general :hello   ; #general does not exist
 	// 	this->sendReply(fd, ERR_NOSUCHNICK);
 	//----------------------------------------------------------------------
-
 	// 	// :irc.server 404 clientNick #general :Cannot send to channel
 	// 	//    Triggered when the sender is not permitted to send to the channel.
 	// 	//    This covers two cases:

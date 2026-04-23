@@ -46,6 +46,8 @@ void	Server::instantiateReplies()
 	this->replyMap[ERR_NORECIPIENT] = "No recipient given (PRIVMSG)";
 	this->replyMap[ERR_NOSUCHCHANNEL] = "No such channel";
 	this->replyMap[ERR_NOORIGIN] = "No origin specified";
+	this->replyMap[RPL_NOTOPIC] = "No topic is set";
+	this->replyMap[ERR_NOTONCHANNEL] = "You're not on that channel";
 }
 
 void	Server::instantiateCmds()

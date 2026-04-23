@@ -9,3 +9,7 @@ mode:
 
 general:
 	- handle when a client disconnects , aka remove self from channels and shi,
+	- structure Makefile so man + bonus is one executable
+
+tips:
+	- use	/set lag_check_time 0   then   /save  so theres no ping/pong in irc.log
