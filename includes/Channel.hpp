@@ -39,8 +39,9 @@ class Channel
 		std::string	modeT(bool, modeBroadcast&);
 
 		void	addClient(Client *client);
+		void	removeClient(Client *client);
 
 		bool	InInviteList(int fd);
-		void	broadcast(Client *client, std::string& message, int forsake_fd);
+		void	broadcast(Client *client, std::string& message);
 };
 

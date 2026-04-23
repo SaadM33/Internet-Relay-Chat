@@ -1,7 +1,7 @@
 #include "Channel.hpp"
 #include "Client.hpp"
 
-void	Channel::broadcast(Client *client, std::string& message, int forsake_fd = 0)
+void	Channel::broadcast(Client *client, std::string& message)
 {
 	std::string							str;
 	std::map<int,Client *>::iterator	it;
@@ -9,9 +9,6 @@ void	Channel::broadcast(Client *client, std::string& message, int forsake_fd = 0
 	std::string prefix = client->getPrefix();
 	for (it = members.begin(); it != members.end(); it++)
 	{
-		if (forsake_fd && it->first == forsake_fd)
-			continue;
-		
 		str = prefix + " " + message;
 		send(it->first, str.c_str(), str.size(), 0);
 	}
@@ -56,6 +53,14 @@ void	Channel::addClient(Client *client)
 	send(client->fd, message.c_str(), message.size(), 0);
 
 	message = ":localhost 366 " + client->nickName + " " + name + " :End of NAMES list\r\n";
-	send(client->fd, message.c_str(), message.size(), 0);
-		
+	send(client->fd, message.c_str(), message.size(), 0);		
+}
+
+void	Channel::removeClient(Client *client)
+{
+	operators.erase(client->fd);
+	members.erase(client->fd);
+	
+	client->channels.erase(name);
+	
 }

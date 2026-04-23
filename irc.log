@@ -1,15 +1,17 @@
-<< CAP LS
-<< PASS asdf
-<< NICK sohamdan
-<< USER sohamdan sohamdan localhost :Soulaiman Hamdan
->> :localhost CAP * LS :
-<< CAP END
->> :localhost 001 sohamdan :Welcome to the IRC server Mortal!
-<< MODE sohamdan +i
->> :localhost 403 sohamdan :No such channel
-<< PING localhost
->> :localhost 421 sohamdan :Unknown command
->> :dex!dex@127.0.0.1 PRIVMSG sohamdan :hello
-<< PRIVMSG dex :bye
-<< PRIVMSG dex ::hello
-<< PRIVMSG dex ::hello
+<< PART #3 :1,2,3
+>> :sel-maaq_!~sel-maaq@197.230.48.178 PART #3 :1,2,3
+<< PART #2 :1,2,3
+>> :sel-maaq_!~sel-maaq@197.230.48.178 PART #2 :1,2,3
+<< PART #1 :1,2,3
+>> :sel-maaq_!~sel-maaq@197.230.48.178 PART #1 :1,2,3
+<< PART 1,2,3
+>> :irc.choopa.net 403 sel-maaq_ 1 :No such channel
+>> :irc.choopa.net 403 sel-maaq_ 2 :No such channel
+>> :irc.choopa.net 403 sel-maaq_ 3 :No such channel
+<< PART #2 :1,2,3 1,2,3
+>> :sel-maaq_!~sel-maaq@197.230.48.178 PART #2 :1,2,3 1,2,3
+<< PART 1,2,3 :1,2,3
+>> :irc.choopa.net 403 sel-maaq_ 1 :No such channel
+>> :irc.choopa.net 403 sel-maaq_ 2 :No such channel
+>> :irc.choopa.net 403 sel-maaq_ 3 :No such channel
+

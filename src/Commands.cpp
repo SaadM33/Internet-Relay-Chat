@@ -59,10 +59,13 @@ void	Server::execNick(int fd, Message msg)
 	}
 	else
 	{
-		std::string brdcst = this->clients[fd]->getPrefix() + " NICK :" + msg.params[0] + "\r\n";
-
-		send(fd, brdcst.c_str(), brdcst.size(), 0); // send broadcast to all clients in the same channels as fd
-		this->clients[fd]->nickName = msg.params[0];
+		std::string brdcst = "NICK :" + msg.params[0] + "\r\n";
+		
+		std::map<std::string, Channel *>::iterator it;
+		for (it = clients[fd]->channels.begin(); it != clients[fd]->channels.end(); it++)
+			it->second->broadcast(clients[fd], brdcst);
+		
+		clients[fd]->nickName = msg.params[0];
 	}
 }
 
@@ -370,10 +373,86 @@ void	Server::execMode(int fd, Message msg)
 	}
 }
 
-void	Server::execPart(int fd, Message msg) { (void)fd, (void)msg; }
+void	Server::execPart(int fd, Message msg)
+{
+	if (msg.params.size() < 1) {
+		sendReply(fd, ERR_NEEDMOREPARAMS);
+		return;
+	}
 
-void	Server::execTopic(int fd, Message msg) { (void)fd, (void)msg; }
+	std::stringstream ss(msg.params[0]);
+	std::string item;
 
+	while (std::getline(ss, item, ','))
+	{
+		if (item.empty())
+			continue ;
+		if (channels.find(item) == channels.end()) {
+			sendReply(fd, ERR_NOSUCHCHANNEL);
+			continue ;
+		}
+		if (clients[fd]->channels.find(item) == clients[fd]->channels.end()) {
+			sendReply(fd, ERR_NOTONCHANNEL);
+			continue ;
+		}
+
+		std::string partMsg = "PART " + item;
+		if (!msg.trailing.empty())
+			partMsg += " :" + msg.trailing;
+		partMsg += "\r\n";
+		channels[item]->broadcast(clients[fd], partMsg);
+		
+		channels[item]->removeClient(clients[fd]);
+
+		if (channels[item]->members.empty()) {
+			delete channels[item];
+			channels.erase(item);
+		}
+	}
+}
+
+void	Server::execTopic(int fd, Message msg)
+{
+	if (msg.params.size() < 1) {
+		sendReply(fd, ERR_NEEDMOREPARAMS);
+		return;
+	}
+	std::string	name_ch = msg.params[0];
+
+	if (channels.find(name_ch) == channels.end()) {
+		sendReply(fd, ERR_NOSUCHCHANNEL);
+		return ;
+	}
+	if (clients[fd]->channels.find(name_ch) == clients[fd]->channels.end()) {
+		sendReply(fd, ERR_NOTONCHANNEL);
+		return ;
+	}
+
+	Channel	*chan = channels[name_ch];
+
+	if (msg.trailing.empty())
+	{
+		if (chan->topic.empty())
+			sendReply(fd, RPL_NOTOPIC);
+		else
+		{
+			std::string reply = ":localhost 332 " + clients[fd]->nickName + " " + name_ch;
+			reply += " :" + chan->topic + "\r\n";
+			send(fd, reply.c_str(), reply.size(), 0);
+		}
+	}
+	else
+	{
+		if (chan->topicRestricted && chan->operators.find(fd) == chan->operators.end())
+			sendReply(fd, ERR_CHANOPRIVSNEEDED);
+		else
+		{
+			chan->topic = msg.trailing;
+			std::string	reply = "TOPIC " + name_ch + " :" + msg.trailing + "\r\n";
+			chan->broadcast(clients[fd], reply);
+		}
+	}
+}
 void	Server::execInvite(int fd, Message msg) { (void)fd, (void)msg; }
 
 void	Server::execKick(int fd, Message msg) { (void)fd, (void)msg; }
@@ -412,7 +491,6 @@ void	Server::execPrivmsg(int fd, Message msg)
 	// 	//    PRIVMSG :hello
 	// 	this->sendReply(fd, ERR_NORECIPIENT); 
 	//----------------------------------------------------------------------
-
 	// 	// :irc.server 412 clientNick :No text to send
 	// 	//    Triggered when a target is given but the message body is empty
 	// 	//    or missing entirely.
@@ -421,16 +499,14 @@ void	Server::execPrivmsg(int fd, Message msg)
 	// 	//    PRIVMSG #general :
 	// 	this->sendReply(fd, ERR_NOTEXTTOSEND);
 	//----------------------------------------------------------------------
-
 	// 	// :irc.server 401 clientNick Wiz :No such nick/channel
 	// 	//    Triggered when the target nickname or channel does not exist
-	// 	//    on the server.
+	// 	//    on the server.chan
 	// 	//    Examples:
 	// 	//    PRIVMSG Wiz :hello        ; Wiz is not connected
 	// 	//    PRIVMSG #general :hello   ; #general does not exist
 	// 	this->sendReply(fd, ERR_NOSUCHNICK);
 	//----------------------------------------------------------------------
-
 	// 	// :irc.server 404 clientNick #general :Cannot send to channel
 	// 	//    Triggered when the sender is not permitted to send to the channel.
 	// 	//    This covers two cases:
@@ -443,3 +519,15 @@ void	Server::execPrivmsg(int fd, Message msg)
 	// 	//    PRIVMSG #general :hello   ; #general is +m and sender has no voice
 	// 	this->sendReply(fd, ERR_CANNOTSENDTOCHAN);
 	//----------------------------------------------------------------------
+
+void	Server::execPing(int fd, Message msg)
+{
+	if (msg.params.empty())
+	{
+		sendReply(fd, ERR_NOORIGIN);
+		return ;
+	}
+
+	std::string reply = "PONG :" + msg.params[0] + "\r\n";
+	send(fd, reply.c_str(), reply.size(), 0);
+}

@@ -1,2 +1,5 @@
 ./vscode
 irc.log
+# .obj files
+*.o
+ircserv

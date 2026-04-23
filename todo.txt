@@ -1,0 +1,15 @@
+nick:
+	fix duplicate broadcast for repeated client in channels
+
+
+mode: 
+	fix the goddamn response when no args given a lmlawi
+
+
+
+general:
+	- handle when a client disconnects , aka remove self from channels and shi,
+	- structure Makefile so man + bonus is one executable
+
+tips:
+	- use	/set lag_check_time 0   then   /save  so theres no ping/pong in irc.log
