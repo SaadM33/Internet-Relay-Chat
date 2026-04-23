@@ -394,16 +394,14 @@ void	Server::execPrivmsg(int fd, Message msg)
 	{
 		if ((*it).second->nickName == msg.params.at(0))
 		{
-			// :senderNick!user@host PRIVMSG <target> :<text>\r\n
-			std::string reply = ":" + this->clients[fd]->nickName
-			+ "!" + this->clients[fd]->userName
-			+ "@localhost PRIVMSG " + msg.params.at(0)
-			+ " :" + msg.trailing + "\r\n";
-			std::cout << reply << std::endl;
-			// std::string reply(msg.trailing + "\r\n");
+			std::string reply = this->clients[fd]->getPrefix() + " PRIVMSG "
+			+ msg.params.at(0) + " :" + msg.trailing + "\r\n";
 			send((*it).second->fd, reply.c_str(), reply.size(), 0);
 			return ;
 		}
+		// too many targets 
+		// if send to channel
+		// if send to operators of a channel
 	}
 	this->sendReply(fd, ERR_NOSUCHNICK);
 }

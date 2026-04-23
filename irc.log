@@ -1,0 +1,15 @@
+<< CAP LS
+<< PASS asdf
+<< NICK sohamdan
+<< USER sohamdan sohamdan localhost :Soulaiman Hamdan
+>> :localhost CAP * LS :
+<< CAP END
+>> :localhost 001 sohamdan :Welcome to the IRC server Mortal!
+<< MODE sohamdan +i
+>> :localhost 403 sohamdan :No such channel
+<< PING localhost
+>> :localhost 421 sohamdan :Unknown command
+>> :dex!dex@127.0.0.1 PRIVMSG sohamdan :hello
+<< PRIVMSG dex :bye
+<< PRIVMSG dex ::hello
+<< PRIVMSG dex ::hello
