@@ -59,8 +59,8 @@ void	Server::execNick(int fd, Message msg)
 	}
 	else
 	{
-		std::string brdcst = "NICK :" + msg.params[0] + "\r\n";
-		
+		// std::string brdcst = "NICK :" + msg.params[0] + "\r\n";
+		std::string brdcst = clients[fd]->getPrefix() + " NICK :" + msg.params[0] + "\r\n";
 		std::map<std::string, Channel *>::iterator it;
 		for (it = clients[fd]->channels.begin(); it != clients[fd]->channels.end(); it++)
 			it->second->broadcast(clients[fd], brdcst);
@@ -396,7 +396,8 @@ void	Server::execPart(int fd, Message msg)
 			continue ;
 		}
 
-		std::string partMsg = "PART " + item;
+		std::string partMsg = clients[fd]->getPrefix() + " PART " + item;		
+		// std::string partMsg = "PART " + item;
 		if (!msg.trailing.empty())
 			partMsg += " :" + msg.trailing;
 		partMsg += "\r\n";
@@ -448,7 +449,8 @@ void	Server::execTopic(int fd, Message msg)
 		else
 		{
 			chan->topic = msg.trailing;
-			std::string	reply = "TOPIC " + name_ch + " :" + msg.trailing + "\r\n";
+			std::string reply = clients[fd]->getPrefix() + " TOPIC " + name_ch + " :" + msg.trailing + "\r\n";
+			// std::string	reply = "TOPIC " + name_ch + " :" + msg.trailing + "\r\n";
 			chan->broadcast(clients[fd], reply);
 		}
 	}
@@ -469,56 +471,66 @@ void	Server::execPrivmsg(int fd, Message msg)
 		sendReply(fd, ERR_NOTEXTTOSEND);
 		return ;
 	}
-	for (std::map<int, Client *>::iterator it = this->clients.begin(); it != this->clients.end(); it++)
+
+	std::stringstream ss(msg.params[0]);
+	std::string params;
+
+	while (std::getline(ss, params, ','))
 	{
-		if ((*it).second->nickName == msg.params.at(0))
+		if (params.empty())
+			continue ;
+		if (params[0] == '#') // handle channels 
 		{
-			std::string reply = this->clients[fd]->getPrefix() + " PRIVMSG "
-			+ msg.params.at(0) + " :" + msg.trailing + "\r\n";
-			send((*it).second->fd, reply.c_str(), reply.size(), 0);
-			return ;
+			std::string channelName(params);
+			if (this->channels.find(channelName) == this->channels.end())
+			{
+				this->sendReply(fd, ERR_NOSUCHCHANNEL);
+				continue;
+			}
+			if (this->channels[channelName]->members.find(fd) == this->channels[channelName]->members.end())
+			{
+				std::string reply = ":localhost 404 " + clients[fd]->nickName + " " + channelName + " :Cannot send to channel\r\n";
+				send(fd, reply.c_str(), reply.size(), 0);
+				continue ;
+			}
+			std::string message = this->clients[fd]->getPrefix() + " PRIVMSG " + params + " :" + msg.trailing + "\r\n";
+			this->channels[channelName]->broadcast(this->clients[fd], message, true);
 		}
-		// too many targets 
-		// if send to channel
-		// if send to operators of a channel
+		else if (params[0] == '@') // handle operators left!
+		{
+			std::string channelName(params, 1);
+			if (this->channels.find(channelName) == this->channels.end())
+			{
+				this->sendReply(fd, ERR_NOSUCHCHANNEL);
+				continue;
+			}
+			if (this->channels[channelName]->members.find(fd) == this->channels[channelName]->members.end())
+			{
+				this->sendReply(fd, ERR_CANNOTSENDTOCHAN);
+				continue ;
+			}
+			this->channels[channelName]->broadcast(this->clients[fd], msg.trailing);
+		}
+		else // handle users
+		{
+			bool found = false;
+			for (std::map<int, Client *>::iterator it = this->clients.begin(); it != this->clients.end(); it++)
+			{
+				if ((*it).second->nickName == params)
+				{
+					std::cout << "oops" << std::endl;
+					std::string reply = this->clients[fd]->getPrefix() + " PRIVMSG "
+					+ params + " :" + msg.trailing + "\r\n";
+					send((*it).second->fd, reply.c_str(), reply.size(), 0);
+					found = true;
+					break ;
+				}
+			}
+			if (!found)
+				this->sendReply(fd, ERR_NOSUCHNICK);
+		}
 	}
-	this->sendReply(fd, ERR_NOSUCHNICK);
 }
-	// 	// :irc.server 411 clientNick :No recipient given (PRIVMSG)
-	// 	//    Triggered when the PRIVMSG command is sent with no target at all.
-	// 	//    Examples:
-	// 	//    PRIVMSG
-	// 	//    PRIVMSG :hello
-	// 	this->sendReply(fd, ERR_NORECIPIENT); 
-	//----------------------------------------------------------------------
-	// 	// :irc.server 412 clientNick :No text to send
-	// 	//    Triggered when a target is given but the message body is empty
-	// 	//    or missing entirely.
-	// 	//    Examples:
-	// 	//    PRIVMSG Wiz
-	// 	//    PRIVMSG #general :
-	// 	this->sendReply(fd, ERR_NOTEXTTOSEND);
-	//----------------------------------------------------------------------
-	// 	// :irc.server 401 clientNick Wiz :No such nick/channel
-	// 	//    Triggered when the target nickname or channel does not exist
-	// 	//    on the server.chan
-	// 	//    Examples:
-	// 	//    PRIVMSG Wiz :hello        ; Wiz is not connected
-	// 	//    PRIVMSG #general :hello   ; #general does not exist
-	// 	this->sendReply(fd, ERR_NOSUCHNICK);
-	//----------------------------------------------------------------------
-	// 	// :irc.server 404 clientNick #general :Cannot send to channel
-	// 	//    Triggered when the sender is not permitted to send to the channel.
-	// 	//    This covers two cases:
-	// 	//          - The channel has mode +m set and the sender is neither
-	// 	//            a channel operator nor voiced (+v).
-	// 	//          - The sender is banned (+b) from the channel and is not
-	// 	//            covered by a ban exception (+e).
-	// 	//    Examples:
-	// 	//    PRIVMSG #general :hello   ; sender is banned from #general
-	// 	//    PRIVMSG #general :hello   ; #general is +m and sender has no voice
-	// 	this->sendReply(fd, ERR_CANNOTSENDTOCHAN);
-	//----------------------------------------------------------------------
 
 void	Server::execPing(int fd, Message msg)
 {

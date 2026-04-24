@@ -1,17 +1,33 @@
 #include "Channel.hpp"
 #include "Client.hpp"
 
-void	Channel::broadcast(Client *client, std::string& message)
+// void	Channel::broadcast(Client *client, std::string& message)
+// {
+// 	std::string							str;
+// 	std::map<int,Client *>::iterator	it;
+
+// 	std::string prefix = client->getPrefix();
+// 	int i = 0;
+// 	std::cout << "will be sent to: " << members.size() << " members!" << std::endl;
+// 	for (it = members.begin(); it != members.end(); it++)
+// 	{
+// 		std::cout << "time: " << i++ << " trying to send to " << it->second->nickName << std::endl;
+// 		str = prefix + " " + message;
+// 		send(it->first, str.c_str(), str.size(), 0);
+// 	}
+// }
+
+void Channel::broadcast(Client *client, std::string& message, bool skipSender)
 {
 	std::string							str;
 	std::map<int,Client *>::iterator	it;
 
-	std::string prefix = client->getPrefix();
 	for (it = members.begin(); it != members.end(); it++)
-	{
-		str = prefix + " " + message;
-		send(it->first, str.c_str(), str.size(), 0);
-	}
+    {
+        if (skipSender && it->first == client->fd)
+            continue;
+        send(it->first, message.c_str(), message.size(), 0);
+    }
 }
 
 bool	Channel::InInviteList(int fd)
@@ -32,8 +48,11 @@ void	Channel::addClient(Client *client)
 	members[client->fd] = client; // add client to channel's members list
 	client->channels[name] = this; // add channel to client's channels list wa mii ya rasi derni
 
-	std::string message = "JOIN " + name + "\r\n";
-	broadcast(client, message);
+	// In addClient (JOIN):
+	std::string message = client->getPrefix() + " JOIN " + name + "\r\n";
+	broadcast(client, message); // sends to all including joiner
+	// std::string message = "JOIN " + name + "\r\n";
+	// broadcast(client, message);
 
 	if (!topic.empty())
 	{
@@ -62,5 +81,4 @@ void	Channel::removeClient(Client *client)
 	members.erase(client->fd);
 	
 	client->channels.erase(name);
-	
 }

@@ -42,12 +42,12 @@ void	Server::instantiateReplies()
 	this->replyMap[ERR_UMODEUNKNOWNFLAG] =  "Unknown MODE flag";
 	this->replyMap[ERR_USERSDONTMATCH] =  "Cannot change mode for other users";
 	this->replyMap[ERR_NOTEXTTOSEND] = "No text to send";
-	// ERR_NORECIPIENT to be modified to accept different commands!!!
 	this->replyMap[ERR_NORECIPIENT] = "No recipient given (PRIVMSG)";
 	this->replyMap[ERR_NOSUCHCHANNEL] = "No such channel";
 	this->replyMap[ERR_NOORIGIN] = "No origin specified";
 	this->replyMap[RPL_NOTOPIC] = "No topic is set";
 	this->replyMap[ERR_NOTONCHANNEL] = "You're not on that channel";
+	this->replyMap[ERR_CANNOTSENDTOCHAN] = "Cannot send to channel";
 }
 
 void	Server::instantiateCmds()
@@ -162,12 +162,15 @@ void	Server::processClient(int i)
 
 void	Server::disconnectClient(int i, int fd)
 {
+	//removing a client from a channel
+	// for (std::map<std::string, Channel *>::iterator it = this->clients[fd]->channels.begin(); it != this->clients[fd]->channels.end(); it++) 
+	// 	it->second->removeClient(this->clients[fd]);
+
 	close(poll_fds[i].fd);
 	this->poll_fds.erase(poll_fds.begin() + i);
 	delete this->clients[fd];
 	this->clients.erase(fd);
 	c_banished = true;
-	// One thing to note: if the client is a member of some channel they need to be deleted from that channel too to avoid having dangling pointers to deleted clients!
 
 	std::cout << "Client " << fd << " disconnected" << std::endl;
 }
@@ -176,6 +179,6 @@ void	Server::sendReply(int fd, std::string code)
 {
 	std::string reply;
 	reply = ":localhost " + code + " " + this->clients[fd]->nickName + " :" + replyMap[code] + "\r\n";
-	
+
 	send(fd, reply.c_str(), reply.size(), 0);	
 }

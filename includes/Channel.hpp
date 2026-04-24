@@ -42,6 +42,7 @@ class Channel
 		void	removeClient(Client *client);
 
 		bool	InInviteList(int fd);
-		void	broadcast(Client *client, std::string& message);
+		// void	broadcast(Client *client, std::string& message);
+		void broadcast(Client *client, std::string& message, bool skipSender = false);
 };
 
