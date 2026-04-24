@@ -59,8 +59,7 @@ void	Server::execNick(int fd, Message msg)
 	}
 	else
 	{
-		// std::string brdcst = "NICK :" + msg.params[0] + "\r\n";
-		std::string brdcst = clients[fd]->getPrefix() + " NICK :" + msg.params[0] + "\r\n";
+		std::string brdcst = "NICK :" + msg.params[0] + "\r\n";
 		std::map<std::string, Channel *>::iterator it;
 		for (it = clients[fd]->channels.begin(); it != clients[fd]->channels.end(); it++)
 			it->second->broadcast(clients[fd], brdcst);
@@ -162,125 +161,6 @@ void	Server::execJoin(int fd, Message msg)
 	}
 
 	
-}
-
-std::string	Channel::modeI(bool modeSwitch, modeBroadcast& brdcst)
-{
-	if (modeSwitch && !this->isInviteOnly) {
-		this->isInviteOnly = true;
-		brdcst.modes += "i";
-	}
-	else if (!modeSwitch && this->isInviteOnly) {
-		this->isInviteOnly = false;
-		brdcst.modes += ("i");
-	}
-
-	return "";
-}
-
-std::string	Channel::modeK(bool modeSwitch, std::string newKey, modeBroadcast& brdcst)
-{
-	if (newKey.empty())
-		return "";
-
-	if (modeSwitch) {
-		this->key = newKey;
-		if (!this->isKeySet) {
-			this->isKeySet = true;
-			brdcst.modes += "k";
-			brdcst.args += " " + newKey;
-		}
-	}
-	else {
-		this->key = "";
-		if (this->isKeySet) {
-			this->isKeySet = false;
-			brdcst.modes += "k";
-			brdcst.args += " *";
-		}
-	}
-
-	return "";
-}
-
-bool	isPositiveInt(const std::string &str)
-{
-	size_t i = 0;
-
-	if (str.empty())
-		return false;
-
-	if (str[i] == '+')
-		i++;
-
-	while (i < str.size()){
-		if (!isdigit(str[i]))
-			return false;
-		i++;
-	}
-
-	return true;
-}
-
-std::string	Channel::modeL(bool modeSwitch, std::string newLim, size_t &paramIndex, modeBroadcast& brdcst)
-{
-	if (modeSwitch) {
-		if (isPositiveInt(newLim)) {
-			std::stringstream ss(newLim);
-			ss >> this->membersLimit;
-			brdcst.modes += "l";
-			brdcst.args += " " + newLim;
-		}
-		paramIndex++;
-	}
-	else {
-		if (this->membersLimit != -1) {
-			this->membersLimit = -1;
-			brdcst.modes += "l";
-		}
-	}
-	
-	return "";
-}
-
-std::string	Channel::modeO(bool modeSwitch, std::string targetNick, modeBroadcast& brdcst)
-{
-	if (targetNick.empty())
-		return "";
-	
-	int targetFd = getFdFromNick(this->members, targetNick);
-	if (members.find(targetFd) == members.end())
-		return ERR_USERNOTINCHANNEL;
-
-	if (modeSwitch) {
-		if (operators.find(targetFd) != operators.end())
-			return "";
-		operators[targetFd] = members[targetFd];
-		brdcst.modes += "o";
-		brdcst.args += " " + targetNick;
-	}
-	else {
-		if (operators.find(targetFd) == operators.end())
-			return "";
-		operators.erase(targetFd);
-		brdcst.modes += "o";
-		brdcst.args += " " + targetNick;
-	}
-	return "";
-}
-
-std::string	Channel::modeT(bool modeSwitch, modeBroadcast& brdcst)
-{
-	if (modeSwitch && !topicRestricted) {
-		topicRestricted = true;
-		brdcst.modes += "t";
-	}
-	else if (!modeSwitch && topicRestricted) {
-		topicRestricted = false;
-		brdcst.modes += "t";
-	}
-
-	return "";
 }
 
 void	Server::execMode(int fd, Message msg)
@@ -396,8 +276,7 @@ void	Server::execPart(int fd, Message msg)
 			continue ;
 		}
 
-		std::string partMsg = clients[fd]->getPrefix() + " PART " + item;		
-		// std::string partMsg = "PART " + item;
+		std::string partMsg = "PART " + item;
 		if (!msg.trailing.empty())
 			partMsg += " :" + msg.trailing;
 		partMsg += "\r\n";
@@ -449,8 +328,7 @@ void	Server::execTopic(int fd, Message msg)
 		else
 		{
 			chan->topic = msg.trailing;
-			std::string reply = clients[fd]->getPrefix() + " TOPIC " + name_ch + " :" + msg.trailing + "\r\n";
-			// std::string	reply = "TOPIC " + name_ch + " :" + msg.trailing + "\r\n";
+			std::string	reply = "TOPIC " + name_ch + " :" + msg.trailing + "\r\n";
 			chan->broadcast(clients[fd], reply);
 		}
 	}
@@ -479,12 +357,12 @@ void	Server::execPrivmsg(int fd, Message msg)
 	{
 		if (params.empty())
 			continue ;
-		if (params[0] == '#') // handle channels 
+		if (params[0] == '#') // handle channels
 		{
 			std::string channelName(params);
 			if (this->channels.find(channelName) == this->channels.end())
 			{
-				this->sendReply(fd, ERR_NOSUCHCHANNEL);
+				this->sendReply(fd, ERR_NOSUCHNICK);
 				continue;
 			}
 			if (this->channels[channelName]->members.find(fd) == this->channels[channelName]->members.end())
@@ -493,24 +371,12 @@ void	Server::execPrivmsg(int fd, Message msg)
 				send(fd, reply.c_str(), reply.size(), 0);
 				continue ;
 			}
-			std::string message = this->clients[fd]->getPrefix() + " PRIVMSG " + params + " :" + msg.trailing + "\r\n";
+			std::string message = "PRIVMSG " + params + " :" + msg.trailing + "\r\n";
 			this->channels[channelName]->broadcast(this->clients[fd], message, true);
 		}
 		else if (params[0] == '@') // handle operators left!
-		{
-			std::string channelName(params, 1);
-			if (this->channels.find(channelName) == this->channels.end())
-			{
-				this->sendReply(fd, ERR_NOSUCHCHANNEL);
-				continue;
-			}
-			if (this->channels[channelName]->members.find(fd) == this->channels[channelName]->members.end())
-			{
-				this->sendReply(fd, ERR_CANNOTSENDTOCHAN);
-				continue ;
-			}
-			this->channels[channelName]->broadcast(this->clients[fd], msg.trailing);
-		}
+			//might change mind
+			;
 		else // handle users
 		{
 			bool found = false;
@@ -518,7 +384,6 @@ void	Server::execPrivmsg(int fd, Message msg)
 			{
 				if ((*it).second->nickName == params)
 				{
-					std::cout << "oops" << std::endl;
 					std::string reply = this->clients[fd]->getPrefix() + " PRIVMSG "
 					+ params + " :" + msg.trailing + "\r\n";
 					send((*it).second->fd, reply.c_str(), reply.size(), 0);

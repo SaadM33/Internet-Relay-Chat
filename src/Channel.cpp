@@ -1,33 +1,20 @@
 #include "Channel.hpp"
 #include "Client.hpp"
+#include "utils.hpp"
 
-// void	Channel::broadcast(Client *client, std::string& message)
-// {
-// 	std::string							str;
-// 	std::map<int,Client *>::iterator	it;
-
-// 	std::string prefix = client->getPrefix();
-// 	int i = 0;
-// 	std::cout << "will be sent to: " << members.size() << " members!" << std::endl;
-// 	for (it = members.begin(); it != members.end(); it++)
-// 	{
-// 		std::cout << "time: " << i++ << " trying to send to " << it->second->nickName << std::endl;
-// 		str = prefix + " " + message;
-// 		send(it->first, str.c_str(), str.size(), 0);
-// 	}
-// }
-
-void Channel::broadcast(Client *client, std::string& message, bool skipSender)
+void	Channel::broadcast(Client *client, std::string& message, bool skipSender)
 {
 	std::string							str;
 	std::map<int,Client *>::iterator	it;
 
+	std::string prefix = client->getPrefix();
 	for (it = members.begin(); it != members.end(); it++)
-    {
-        if (skipSender && it->first == client->fd)
+	{
+		if (skipSender && it->first == client->fd)
             continue;
-        send(it->first, message.c_str(), message.size(), 0);
-    }
+		str = prefix + " " + message;
+		send(it->first, str.c_str(), str.size(), 0);
+	}
 }
 
 bool	Channel::InInviteList(int fd)
@@ -48,11 +35,8 @@ void	Channel::addClient(Client *client)
 	members[client->fd] = client; // add client to channel's members list
 	client->channels[name] = this; // add channel to client's channels list wa mii ya rasi derni
 
-	// In addClient (JOIN):
-	std::string message = client->getPrefix() + " JOIN " + name + "\r\n";
-	broadcast(client, message); // sends to all including joiner
-	// std::string message = "JOIN " + name + "\r\n";
-	// broadcast(client, message);
+	std::string message = "JOIN " + name + "\r\n";
+	broadcast(client, message);
 
 	if (!topic.empty())
 	{
@@ -81,4 +65,124 @@ void	Channel::removeClient(Client *client)
 	members.erase(client->fd);
 	
 	client->channels.erase(name);
+}
+int	getFdFromNick(const std::map<int, Client *> &clients, std::string str);
+
+std::string	Channel::modeI(bool modeSwitch, modeBroadcast& brdcst)
+{
+	if (modeSwitch && !this->isInviteOnly) {
+		this->isInviteOnly = true;
+		brdcst.modes += "i";
+	}
+	else if (!modeSwitch && this->isInviteOnly) {
+		this->isInviteOnly = false;
+		brdcst.modes += ("i");
+	}
+
+	return "";
+}
+
+std::string	Channel::modeK(bool modeSwitch, std::string newKey, modeBroadcast& brdcst)
+{
+	if (newKey.empty())
+		return "";
+
+	if (modeSwitch) {
+		this->key = newKey;
+		if (!this->isKeySet) {
+			this->isKeySet = true;
+			brdcst.modes += "k";
+			brdcst.args += " " + newKey;
+		}
+	}
+	else {
+		this->key = "";
+		if (this->isKeySet) {
+			this->isKeySet = false;
+			brdcst.modes += "k";
+			brdcst.args += " *";
+		}
+	}
+
+	return "";
+}
+
+bool	isPositiveInt(const std::string &str)
+{
+	size_t i = 0;
+
+	if (str.empty())
+		return false;
+
+	if (str[i] == '+')
+		i++;
+
+	while (i < str.size()){
+		if (!isdigit(str[i]))
+			return false;
+		i++;
+	}
+
+	return true;
+}
+
+std::string	Channel::modeL(bool modeSwitch, std::string newLim, size_t &paramIndex, modeBroadcast& brdcst)
+{
+	if (modeSwitch) {
+		if (isPositiveInt(newLim)) {
+			std::stringstream ss(newLim);
+			ss >> this->membersLimit;
+			brdcst.modes += "l";
+			brdcst.args += " " + newLim;
+		}
+		paramIndex++;
+	}
+	else {
+		if (this->membersLimit != -1) {
+			this->membersLimit = -1;
+			brdcst.modes += "l";
+		}
+	}
+	
+	return "";
+}
+
+std::string	Channel::modeO(bool modeSwitch, std::string targetNick, modeBroadcast& brdcst)
+{
+	if (targetNick.empty())
+		return "";
+	
+	int targetFd = getFdFromNick(this->members, targetNick);
+	if (members.find(targetFd) == members.end())
+		return ERR_USERNOTINCHANNEL;
+
+	if (modeSwitch) {
+		if (operators.find(targetFd) != operators.end())
+			return "";
+		operators[targetFd] = members[targetFd];
+		brdcst.modes += "o";
+		brdcst.args += " " + targetNick;
+	}
+	else {
+		if (operators.find(targetFd) == operators.end())
+			return "";
+		operators.erase(targetFd);
+		brdcst.modes += "o";
+		brdcst.args += " " + targetNick;
+	}
+	return "";
+}
+
+std::string	Channel::modeT(bool modeSwitch, modeBroadcast& brdcst)
+{
+	if (modeSwitch && !topicRestricted) {
+		topicRestricted = true;
+		brdcst.modes += "t";
+	}
+	else if (!modeSwitch && topicRestricted) {
+		topicRestricted = false;
+		brdcst.modes += "t";
+	}
+
+	return "";
 }
