@@ -406,9 +406,78 @@ void    Server::execInvite(int fd, Message msg)
 	this->channels[msg.params[1]]->inviteList.push_back(targetFd);
 }
 
-void	Server::execKick(int fd, Message msg)
+void    Server::execKick(int fd, Message msg)
 {
-	(void)fd, (void)msg;
+	// Check if there are NOT two params
+	if (msg.params.empty() || msg.params.size() < 2)
+	{
+		sendReply(fd, ERR_NEEDMOREPARAMS);
+		return ;
+	}
+	// Check if the target channel does NOT exist
+	if (this->channels.find(msg.params[0]) == this->channels.end())
+	{
+		sendReply(fd, ERR_NOSUCHCHANNEL);
+		return ;
+	}
+
+	// Check if the invoker is NOT a channel member
+	if (this->channels[msg.params[0]]->members.find(fd) == this->channels[msg.params[0]]->members.end())
+	{
+		sendReply(fd, ERR_NOTONCHANNEL);
+		return ;
+	}
+
+	// Check if the invoker is NOT an operator
+	if (this->channels[msg.params[0]]->operators.find(fd) == this->channels[msg.params[0]]->operators.end())
+	{
+		sendReply(fd, ERR_CHANOPRIVSNEEDED);
+		return ;
+	}
+	
+	// Determine comment (default to invoker nickname if not provided)
+	std::string comment;
+	if (msg.params.size() < 3)
+		comment = this->clients[fd]->nickName;
+	else
+		comment = msg.params[2];
+
+	// Loop over comma-separated users in msg.params[1]
+	std::stringstream ss(msg.params[1]);
+	std::string targetNick;
+	while (std::getline(ss, targetNick, ','))
+	{
+		// Check if the target nick does NOT exist
+		bool found = false;
+		int	targetFd;
+		for (std::map<int, Client *>::iterator it = this->clients.begin(); it != this->clients.end(); it++)
+		{
+			if ((*it).second->nickName == targetNick)
+			{
+				found = true;
+				targetFd = (*it).second->fd;
+				break ;
+			}
+		}
+		if (!found)
+		{
+			sendReply(fd, ERR_NOSUCHNICK);
+			continue ;
+		}
+
+		// Check if the target user is NOT in the channel
+		if (this->channels[msg.params[0]]->members.find(targetFd) == this->channels[msg.params[0]]->members.end())
+		{
+			sendReply(fd, ERR_USERNOTINCHANNEL);
+			continue ;
+		}
+
+		// Send KICK message to all channel members
+		std::string brdcst = "KICK " + msg.params[0] + " " + targetNick + " :" + comment + "\r\n";
+		this->channels[msg.params[0]]->broadcast(this->clients[fd], brdcst);
+		// Remove target from channel members
+		this->channels[msg.params[0]]->removeClient(this->clients[targetFd]);
+	}
 }
 
 void	Server::execPrivmsg(int fd, Message msg)
