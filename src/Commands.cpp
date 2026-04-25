@@ -116,7 +116,7 @@ void	Server::execJoin(int fd, Message msg)
 {
 	if (msg.params.size() < 1)
 	{
-		sendReply(fd, ERR_NEEDMOREPARAMS);
+		sendReply(fd, ERR_NEEDMOREPARAMS, msg.command);
 		return ;
 	}
 
@@ -182,7 +182,7 @@ void	cleanUpModes(std::string& modes)
 void	Server::execMode(int fd, Message msg)
 {
 	if (msg.params.size() < 1) {
-		sendReply(fd, ERR_NEEDMOREPARAMS);
+		sendReply(fd, ERR_NEEDMOREPARAMS, msg.command);
 		return ;
 	}
 
@@ -281,9 +281,10 @@ void	Server::execMode(int fd, Message msg)
 		if (!replyCode.empty())
 			sendReply(fd, replyCode);
 	}
+
 	if (!brdcst.modes.empty()) {
 		cleanUpModes(brdcst.modes);
-		std::string finalMsg = " MODE " + target + " " + brdcst.modes + brdcst.args + "\r\n";
+		std::string finalMsg = "MODE " + target + " " + brdcst.modes + brdcst.args + "\r\n";
 		channels[target]->broadcast(clients[fd], finalMsg);
 	}
 	if (!brdcst.unknown.empty()) {
@@ -377,7 +378,7 @@ void    Server::execInvite(int fd, Message msg)
 	// Check if there are NOT two params
 	if (msg.params.empty() || msg.params.size() < 2)
 	{
-		sendReply(fd, ERR_NEEDMOREPARAMS);
+		sendReply(fd, ERR_NEEDMOREPARAMS, msg.command);
 		return ;
 	}
 
@@ -395,21 +396,21 @@ void    Server::execInvite(int fd, Message msg)
 	}
 	if (!found)
 	{
-		sendReply(fd, ERR_NOSUCHNICK);
+		sendReply(fd, ERR_NOSUCHNICK, msg.params[0]);
 		return ;
 	}
 
 	// Check if the target channel does NOT exist
 	if (this->channels.find(msg.params[1]) == this->channels.end())
 	{
-		sendReply(fd, ERR_NOSUCHCHANNEL);
+		sendReply(fd, ERR_NOSUCHCHANNEL, msg.params[1]);
 		return ;
 	}
 
 	// Check if the invoker is NOT a channel member
 	if (this->channels[msg.params[1]]->members.find(fd) == this->channels[msg.params[1]]->members.end())
 	{
-		sendReply(fd, ERR_NOTONCHANNEL);
+		sendReply(fd, ERR_NOTONCHANNEL, msg.params[1]);
 		return ;
 	}
 
@@ -419,7 +420,7 @@ void    Server::execInvite(int fd, Message msg)
 		// Check if the invoker is NOT an operator
 		if (this->channels[msg.params[1]]->operators.find(fd) == this->channels[msg.params[1]]->operators.end())
 		{
-			sendReply(fd, ERR_CHANOPRIVSNEEDED);
+			sendReply(fd, ERR_CHANOPRIVSNEEDED, msg.params[1]);
 			return ;
 		}
 	}
@@ -427,7 +428,7 @@ void    Server::execInvite(int fd, Message msg)
 	// Check if the target user is already in the target channel
 	if (this->channels[msg.params[1]]->members.find(targetFd) != this->channels[msg.params[1]]->members.end())
 	{
-		sendReply(fd, ERR_USERONCHANNEL);
+		sendReply(fd, ERR_USERONCHANNEL, msg.params[0] + " " + msg.params[1]);
 		return ;
 	}
 
@@ -448,27 +449,27 @@ void    Server::execKick(int fd, Message msg)
 	// Check if there are NOT two params
 	if (msg.params.empty() || msg.params.size() < 2)
 	{
-		sendReply(fd, ERR_NEEDMOREPARAMS);
+		sendReply(fd, ERR_NEEDMOREPARAMS, msg.command);
 		return ;
 	}
 	// Check if the target channel does NOT exist
 	if (this->channels.find(msg.params[0]) == this->channels.end())
 	{
-		sendReply(fd, ERR_NOSUCHCHANNEL);
+		sendReply(fd, ERR_NOSUCHCHANNEL, msg.params[0]);
 		return ;
 	}
 
 	// Check if the invoker is NOT a channel member
 	if (this->channels[msg.params[0]]->members.find(fd) == this->channels[msg.params[0]]->members.end())
 	{
-		sendReply(fd, ERR_NOTONCHANNEL);
+		sendReply(fd, ERR_NOTONCHANNEL, msg.params[0]);
 		return ;
 	}
 
 	// Check if the invoker is NOT an operator
 	if (this->channels[msg.params[0]]->operators.find(fd) == this->channels[msg.params[0]]->operators.end())
 	{
-		sendReply(fd, ERR_CHANOPRIVSNEEDED);
+		sendReply(fd, ERR_CHANOPRIVSNEEDED, msg.params[0]);
 		return ;
 	}
 	
@@ -498,14 +499,14 @@ void    Server::execKick(int fd, Message msg)
 		}
 		if (!found)
 		{
-			sendReply(fd, ERR_NOSUCHNICK);
+			sendReply(fd, ERR_NOSUCHNICK, targetNick);
 			continue ;
 		}
 
 		// Check if the target user is NOT in the channel
 		if (this->channels[msg.params[0]]->members.find(targetFd) == this->channels[msg.params[0]]->members.end())
 		{
-			sendReply(fd, ERR_USERNOTINCHANNEL);
+			sendReply(fd, ERR_USERNOTINCHANNEL, targetNick + " " + msg.params[0]); // sends: :localhost 441 <invokerNick> <targetNick> <channel> :They aren't on that channel\r\n
 			continue ;
 		}
 
@@ -521,12 +522,12 @@ void	Server::execPrivmsg(int fd, Message msg)
 {
 	if (msg.params.empty())
 	{
-		this->sendReply(fd, ERR_NORECIPIENT);
+		 sendReply(fd, ERR_NORECIPIENT, msg.command);
 		return ;
 	}
 	else if (msg.trailing.empty())
 	{
-		sendReply(fd, ERR_NOTEXTTOSEND);
+		sendReply(fd, ERR_NOTEXTTOSEND, msg.command);
 		return ;
 	}
 
