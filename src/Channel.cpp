@@ -73,11 +73,11 @@ std::string	Channel::modeI(bool modeSwitch, modeBroadcast& brdcst)
 {
 	if (modeSwitch && !this->isInviteOnly) {
 		this->isInviteOnly = true;
-		brdcst.modes += "i";
+		brdcst.modes += "+i";
 	}
 	else if (!modeSwitch && this->isInviteOnly) {
 		this->isInviteOnly = false;
-		brdcst.modes += ("i");
+		brdcst.modes += ("-i");
 	}
 
 	return "";
@@ -92,7 +92,7 @@ std::string	Channel::modeK(bool modeSwitch, std::string newKey, modeBroadcast& b
 		this->key = newKey;
 		if (!this->isKeySet) {
 			this->isKeySet = true;
-			brdcst.modes += "k";
+			brdcst.modes += "+k";
 			brdcst.args += " " + newKey;
 		}
 	}
@@ -100,7 +100,7 @@ std::string	Channel::modeK(bool modeSwitch, std::string newKey, modeBroadcast& b
 		this->key = "";
 		if (this->isKeySet) {
 			this->isKeySet = false;
-			brdcst.modes += "k";
+			brdcst.modes += "-k";
 			brdcst.args += " *";
 		}
 	}
@@ -133,7 +133,7 @@ std::string	Channel::modeL(bool modeSwitch, std::string newLim, size_t &paramInd
 		if (isPositiveInt(newLim)) {
 			std::stringstream ss(newLim);
 			ss >> this->membersLimit;
-			brdcst.modes += "l";
+			brdcst.modes += "+l";
 			brdcst.args += " " + newLim;
 		}
 		paramIndex++;
@@ -141,7 +141,7 @@ std::string	Channel::modeL(bool modeSwitch, std::string newLim, size_t &paramInd
 	else {
 		if (this->membersLimit != -1) {
 			this->membersLimit = -1;
-			brdcst.modes += "l";
+			brdcst.modes += "-l";
 		}
 	}
 	
@@ -161,14 +161,14 @@ std::string	Channel::modeO(bool modeSwitch, std::string targetNick, modeBroadcas
 		if (operators.find(targetFd) != operators.end())
 			return "";
 		operators[targetFd] = members[targetFd];
-		brdcst.modes += "o";
+		brdcst.modes += "+o";
 		brdcst.args += " " + targetNick;
 	}
 	else {
 		if (operators.find(targetFd) == operators.end())
 			return "";
 		operators.erase(targetFd);
-		brdcst.modes += "o";
+		brdcst.modes += "-o";
 		brdcst.args += " " + targetNick;
 	}
 	return "";
@@ -178,11 +178,11 @@ std::string	Channel::modeT(bool modeSwitch, modeBroadcast& brdcst)
 {
 	if (modeSwitch && !topicRestricted) {
 		topicRestricted = true;
-		brdcst.modes += "t";
+		brdcst.modes += "+t";
 	}
 	else if (!modeSwitch && topicRestricted) {
 		topicRestricted = false;
-		brdcst.modes += "t";
+		brdcst.modes += "-t";
 	}
 
 	return "";

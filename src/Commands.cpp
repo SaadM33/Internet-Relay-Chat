@@ -165,6 +165,20 @@ void	Server::execJoin(int fd, Message msg)
 	
 }
 
+void	cleanUpModes(std::string& modes)
+{
+	bool	modeSwitch = false;
+
+	for (size_t i = 0; i < modes.size(); i++) {
+		if ((modeSwitch == true && modes[i] == '+') || (modeSwitch == false && modes[i] == '-'))
+			modes.erase(i, 1);
+		else if (modeSwitch == true && modes[i] == '-')
+			modeSwitch = false;
+		else if (modeSwitch == false && modes[i] == '+')
+			modeSwitch = true;
+	}
+}
+
 void	Server::execMode(int fd, Message msg)
 {
 	if (msg.params.size() < 1) {
@@ -172,25 +186,43 @@ void	Server::execMode(int fd, Message msg)
 		return ;
 	}
 
-	std::string		name = msg.params[0];
+	std::string		target = msg.params[0];
+	std::string		senderNick = this->clients[fd]->nickName;
 
-	if (channels.find(name) == channels.end()) {
-		sendReply(fd, ERR_NOSUCHCHANNEL, name);
+	if (target[0] != '#') {
+		if (target != senderNick) {
+			sendReply(fd, ERR_USERSDONTMATCH);
+			return ;
+		}
+
+		if (msg.params.size() == 1) {
+			sendReply(fd, RPL_UMODEIS);
+			return ;
+		}
+
+		std::string reply = ":" + senderNick + " MODE " + senderNick + " :" + msg.params[1] + "\r\n";
+		send(fd, reply.c_str(), reply.size(), 0);
+
 		return ;
 	}
 
-	if (channels[name]->members.find(fd) == channels[name]->members.end()) {
-		sendReply(fd, ERR_NOTONCHANNEL, name);
+	if (channels.find(target) == channels.end()) {
+		sendReply(fd, ERR_NOSUCHCHANNEL, target);
 		return ;
 	}
 
-	if (channels[name]->operators.find(fd) == channels[name]->operators.end()) {
-		sendReply(fd, ERR_CHANOPRIVSNEEDED, name);
+	if (channels[target]->members.find(fd) == channels[target]->members.end()) {
+		sendReply(fd, ERR_NOTONCHANNEL, target);
+		return ;
+	}
+
+	if (channels[target]->operators.find(fd) == channels[target]->operators.end()) {
+		sendReply(fd, ERR_CHANOPRIVSNEEDED, target);
 		return ;
 	}
 
 	if (msg.params.size() == 1) {
-		sendReply(fd, RPL_CHANNELMODEIS, name);
+		sendReply(fd, RPL_CHANNELMODEIS, target);
 		return ;
 	}
 
@@ -211,39 +243,35 @@ void	Server::execMode(int fd, Message msg)
 		
 		switch (modeStr[i]) {
 			case '+':
-				if (modeSwitch == false || brdcst.modes.empty()) {
+				if (modeSwitch == false || brdcst.modes.empty())
 					modeSwitch = true;
-					brdcst.modes += "+";
-				}
 				break ;
 	
 			case '-':
-				if (modeSwitch == true || brdcst.modes.empty()) {
+				if (modeSwitch == true || brdcst.modes.empty())
 					modeSwitch = false;
-					brdcst.modes += "-";
-				}
 				break ;
 	
 			case 'i':
-				replyCode = channels[name]->modeI(modeSwitch, brdcst);
+				replyCode = channels[target]->modeI(modeSwitch, brdcst);
 				break ;
 
 			case 'k':
-				replyCode = channels[name]->modeK(modeSwitch, arg, brdcst);
+				replyCode = channels[target]->modeK(modeSwitch, arg, brdcst);
 				paramIndex++;
 				break ;
 
 			case 'l':
-				replyCode = channels[name]->modeL(modeSwitch, arg, paramIndex, brdcst);
+				replyCode = channels[target]->modeL(modeSwitch, arg, paramIndex, brdcst);
 				break ;
 
 			case 'o':
-				replyCode = channels[name]->modeO(modeSwitch, arg, brdcst);
+				replyCode = channels[target]->modeO(modeSwitch, arg, brdcst);
 				paramIndex++;
 				break ;
 
 			case 't':
-				replyCode = channels[name]->modeT(modeSwitch, brdcst);
+				replyCode = channels[target]->modeT(modeSwitch, brdcst);
 				break ;
 
 			default :
@@ -252,6 +280,15 @@ void	Server::execMode(int fd, Message msg)
 
 		if (!replyCode.empty())
 			sendReply(fd, replyCode);
+	}
+	if (!brdcst.modes.empty()) {
+		cleanUpModes(brdcst.modes);
+		std::string finalMsg = " MODE " + target + " " + brdcst.modes + brdcst.args + "\r\n";
+		channels[target]->broadcast(clients[fd], finalMsg);
+	}
+	if (!brdcst.unknown.empty()) {
+		std::string reply = ":" + senderNick + " MODE " + target + " '" + brdcst.unknown + "' :Unknown mode characters !\r\n";
+		send(fd, reply.c_str(), reply.size(), 0);
 	}
 }
 

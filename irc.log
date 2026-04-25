@@ -1,0 +1,36 @@
+<< CAP LS
+<< PASS s
+<< NICK hqannouc
+<< USER hqannouc hqannouc localhost :Hatim Qannouch
+>> :localhost CAP * LS :
+<< CAP END
+>> :localhost 001 hqannouc :Welcome to the IRC server Mortal!
+<< MODE hqannouc +i
+>> :hqannouc MODE hqannouc :+i
+<< PING localhost
+>> PONG :localhost
+--> lag pong
+<< JOIN #ees
+>> :hqannouc!hqannouc@127.0.0.1 JOIN #ees
+>> :localhost 353 hqannouc = #ees :@hqannouc 
+>> :localhost 366 hqannouc #ees :End of NAMES list
+<< MODE #ees
+>> :localhost 324 hqannouc #ees :
+--> chanquery mode
+<< WHO #ees
+>> :localhost 421 hqannouc WHO :Command beyond comprehension
+<< MODE #ees +wh3
+>> :hqannouc MODE #ees 'wh3' :Unknown mode characters !
+<< PART #ees
+>> :hqannouc!hqannouc@127.0.0.1 PART #ees
+<< JOIN #eww
+>> :hqannouc!hqannouc@127.0.0.1 JOIN #eww
+>> :localhost 353 hqannouc = #eww :@hqannouc 
+>> :localhost 366 hqannouc #eww :End of NAMES list
+<< MODE #eww
+>> :localhost 324 hqannouc #eww :
+--> chanquery mode
+<< WHO #eww
+>> :localhost 421 hqannouc WHO :Command beyond comprehension
+<< MODE #eww +wr
+>> :hqannouc MODE #eww 'wr' :Unknown mode characters !
