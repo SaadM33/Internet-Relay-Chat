@@ -158,6 +158,7 @@ void	Server::execJoin(int fd, Message msg)
 				continue ;
 			}
 			channels[name]->addClient(clients[fd]);
+			// the user needs to be removed from the invitelist once joined to the channel
 		}
 	}
 
@@ -334,9 +335,81 @@ void	Server::execTopic(int fd, Message msg)
 		}
 	}
 }
-void	Server::execInvite(int fd, Message msg) { (void)fd, (void)msg; }
+void    Server::execInvite(int fd, Message msg)
+{
+	// Check if there are NOT two params
+	if (msg.params.empty() || msg.params.size() < 2)
+	{
+		sendReply(fd, ERR_NEEDMOREPARAMS);
+		return ;
+	}
 
-void	Server::execKick(int fd, Message msg) { (void)fd, (void)msg; }
+	// Check if the target nick does NOT exist
+	bool found = false;
+	int	targetFd;
+	for (std::map<int, Client *>::iterator it = this->clients.begin(); it != this->clients.end(); it++)
+	{
+		if ((*it).second->nickName == msg.params[0])
+		{
+			found = true;
+			targetFd = (*it).second->fd;
+			break ;
+		}
+	}
+	if (!found)
+	{
+		sendReply(fd, ERR_NOSUCHNICK);
+		return ;
+	}
+
+	// Check if the target channel does NOT exist
+	if (this->channels.find(msg.params[1]) == this->channels.end())
+	{
+		sendReply(fd, ERR_NOSUCHCHANNEL);
+		return ;
+	}
+
+	// Check if the invoker is NOT a channel member
+	if (this->channels[msg.params[1]]->members.find(fd) == this->channels[msg.params[1]]->members.end())
+	{
+		sendReply(fd, ERR_NOTONCHANNEL);
+		return ;
+	}
+
+	// Check if the target channel is on invite-only mode (+i)
+	if (this->channels[msg.params[1]]->isInviteOnly)
+	{
+		// Check if the invoker is NOT an operator
+		if (this->channels[msg.params[1]]->operators.find(fd) == this->channels[msg.params[1]]->operators.end())
+		{
+			sendReply(fd, ERR_CHANOPRIVSNEEDED);
+			return ;
+		}
+	}
+
+	// Check if the target user is already in the target channel
+	if (this->channels[msg.params[1]]->members.find(targetFd) != this->channels[msg.params[1]]->members.end())
+	{
+		sendReply(fd, ERR_USERONCHANNEL);
+		return ;
+	}
+
+	// On success
+		// Send RPL_INVITING to the invoker
+	std::string reply = ":localhost 341 " + this->clients[fd]->nickName + " " + msg.params[0] + " " + this->channels[msg.params[1]]->name + "\r\n";
+	send(fd, reply.c_str(), reply.size(), 0);
+		// Send INVITE message to the target user
+		// :<invokerNick>!<invokerUser>@<invokerHost> INVITE <targetNick> <channel>
+	reply = this->clients[fd]->getPrefix() + " " + msg.command + " " + msg.params[0] + " " + this->channels[msg.params[1]]->name + "\r\n";
+	send(targetFd, reply.c_str(), reply.size(), 0);
+		// Add the target user to the inviteList
+	this->channels[msg.params[1]]->inviteList.push_back(targetFd);
+}
+
+void	Server::execKick(int fd, Message msg)
+{
+	(void)fd, (void)msg;
+}
 
 void	Server::execPrivmsg(int fd, Message msg)
 {

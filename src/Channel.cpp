@@ -60,6 +60,7 @@ void	Channel::addClient(Client *client)
 
 void	Channel::removeClient(Client *client)
 {
+
 	operators.erase(client->fd);
 	members.erase(client->fd);
 	
