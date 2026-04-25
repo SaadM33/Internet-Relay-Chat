@@ -10,7 +10,7 @@ void	Server::processCmd(int fd, Message msg)
 	//removed temporarily for a simpler testing flow
 	if (needsRegistration(msg.command) && !this->clients[fd]->isRegistered)
 	{
-		sendReply(fd, ERR_NOTREGISTERED);
+		sendReply(fd, ERR_NOTREGISTERED, msg.command);
 		return ;
 	}
 
@@ -18,5 +18,5 @@ void	Server::processCmd(int fd, Message msg)
 	if (it != cmdMap.end())
 		(this->*(it->second))(fd, msg);
 	else
-		sendReply(fd, ERR_UNKNOWNCOMMAND);
+		sendReply(fd, ERR_UNKNOWNCOMMAND, msg.command);
 }

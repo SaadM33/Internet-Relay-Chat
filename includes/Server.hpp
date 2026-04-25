@@ -55,5 +55,5 @@ class Server
 		void	execPrivmsg(int, Message);
 		void	execPing(int, Message);
 
-		void	sendReply(int fd, std::string code);
+		void	sendReply(int fd, std::string code, std::string middle = "");
 };

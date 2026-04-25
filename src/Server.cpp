@@ -35,12 +35,8 @@ void	Server::instantiateReplies()
 	this->replyMap[ERR_PASSWDMISMATCH] =  "Password incorrect";
 	this->replyMap[ERR_CHANNELISFULL] =  "Channel is full";
 	this->replyMap[ERR_INVITEONLYCHAN] =  "Cannot join channel (+i)";
-	this->replyMap[ERR_BANNEDFROMCHAN] =  "Cannot join channel (+b)";
 	this->replyMap[ERR_BADCHANNELKEY] =  "Cannot join channel (+k)";
-	this->replyMap[ERR_BADCHANMASK] =  "Bad Channel Mask";
 	this->replyMap[ERR_CHANOPRIVSNEEDED] =  "You're not channel operator";
-	this->replyMap[ERR_UMODEUNKNOWNFLAG] =  "Unknown MODE flag";
-	this->replyMap[ERR_USERSDONTMATCH] =  "Cannot change mode for other users";
 	this->replyMap[ERR_NOTEXTTOSEND] = "No text to send";
 	this->replyMap[ERR_NORECIPIENT] = "No recipient given (PRIVMSG)";
 	this->replyMap[ERR_NOSUCHCHANNEL] = "No such channel";
@@ -48,6 +44,7 @@ void	Server::instantiateReplies()
 	this->replyMap[RPL_NOTOPIC] = "No topic is set";
 	this->replyMap[ERR_NOTONCHANNEL] = "You're not on that channel";
 	this->replyMap[ERR_CANNOTSENDTOCHAN] = "Cannot send to channel";
+	this->replyMap[ERR_USERNOTINCHANNEL] = "They're not on that channel";
 }
 
 void	Server::instantiateCmds()
@@ -175,10 +172,16 @@ void	Server::disconnectClient(int i, int fd)
 	std::cout << "Client " << fd << " disconnected" << std::endl;
 }
 
-void	Server::sendReply(int fd, std::string code)
+void	Server::sendReply(int fd, std::string code, std::string middle)
 {
 	std::string reply;
-	reply = ":localhost " + code + " " + this->clients[fd]->nickName + " :" + replyMap[code] + "\r\n";
+
+	reply = ":localhost " + code + " " + this->clients[fd]->nickName;
+	
+	if (!middle.empty())
+		reply += " " + middle;
+
+	reply += " :" + replyMap[code] + "\r\n";
 
 	send(fd, reply.c_str(), reply.size(), 0);	
 }

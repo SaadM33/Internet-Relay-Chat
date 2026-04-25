@@ -47,7 +47,7 @@ void	Server::execNick(int fd, Message msg)
 	}
 
 	if (getFdFromNick(this->clients, msg.params[0]) != -1) {
-		sendReply(fd, ERR_NICKNAMEINUSE);
+		sendReply(fd, ERR_NICKNAMEINUSE, msg.params[0]);
 		return ;
 	}
 
@@ -60,6 +60,7 @@ void	Server::execNick(int fd, Message msg)
 	else
 	{
 		std::string brdcst = "NICK :" + msg.params[0] + "\r\n";
+
 		std::map<std::string, Channel *>::iterator it;
 		for (it = clients[fd]->channels.begin(); it != clients[fd]->channels.end(); it++)
 			it->second->broadcast(clients[fd], brdcst);
@@ -129,7 +130,7 @@ void	Server::execJoin(int fd, Message msg)
 
 		if (name.empty() || name[0] != '#')
 		{
-			sendReply(fd, ERR_NOSUCHCHANNEL);
+			sendReply(fd, ERR_NOSUCHCHANNEL, name);
 			continue ;
 		}
 		if (channels.find(name) == channels.end())
@@ -143,17 +144,17 @@ void	Server::execJoin(int fd, Message msg)
 		{
 			if (channels[name]->isInviteOnly && !channels[name]->InInviteList(fd))
 			{
-				sendReply(fd, ERR_INVITEONLYCHAN);
+				sendReply(fd, ERR_INVITEONLYCHAN, name);
 				continue ;
 			}
 			if (channels[name]->isKeySet && (i >= keys.size() || keys[i].empty() || keys[i] != channels[name]->key))
 			{
-				sendReply(fd, ERR_BADCHANNELKEY);
+				sendReply(fd, ERR_BADCHANNELKEY, name);
 				continue ;
 			}
 			if (channels[name]->members.size() == (size_t)channels[name]->membersLimit)
 			{
-				sendReply(fd, ERR_CHANNELISFULL);
+				sendReply(fd, ERR_CHANNELISFULL, name);
 				continue ;
 			}
 			channels[name]->addClient(clients[fd]);
@@ -173,22 +174,22 @@ void	Server::execMode(int fd, Message msg)
 	std::string		name = msg.params[0];
 
 	if (channels.find(name) == channels.end()) {
-		sendReply(fd, ERR_NOSUCHCHANNEL);
+		sendReply(fd, ERR_NOSUCHCHANNEL, name);
 		return ;
 	}
 
 	if (channels[name]->members.find(fd) == channels[name]->members.end()) {
-		sendReply(fd, ERR_NOTONCHANNEL); 	
+		sendReply(fd, ERR_NOTONCHANNEL, name);
 		return ;
 	}
 
 	if (channels[name]->operators.find(fd) == channels[name]->operators.end()) {
-		sendReply(fd, ERR_CHANOPRIVSNEEDED);
+		sendReply(fd, ERR_CHANOPRIVSNEEDED, name);
 		return ;
 	}
 
 	if (msg.params.size() == 1) {
-		sendReply(fd, RPL_CHANNELMODEIS);
+		sendReply(fd, RPL_CHANNELMODEIS, name);
 		return ;
 	}
 
@@ -268,11 +269,11 @@ void	Server::execPart(int fd, Message msg)
 		if (item.empty())
 			continue ;
 		if (channels.find(item) == channels.end()) {
-			sendReply(fd, ERR_NOSUCHCHANNEL);
+			sendReply(fd, ERR_NOSUCHCHANNEL, item);
 			continue ;
 		}
 		if (clients[fd]->channels.find(item) == clients[fd]->channels.end()) {
-			sendReply(fd, ERR_NOTONCHANNEL);
+			sendReply(fd, ERR_NOTONCHANNEL, item);
 			continue ;
 		}
 
@@ -294,17 +295,17 @@ void	Server::execPart(int fd, Message msg)
 void	Server::execTopic(int fd, Message msg)
 {
 	if (msg.params.size() < 1) {
-		sendReply(fd, ERR_NEEDMOREPARAMS);
+		sendReply(fd, ERR_NEEDMOREPARAMS, msg.command);
 		return;
 	}
 	std::string	name_ch = msg.params[0];
 
 	if (channels.find(name_ch) == channels.end()) {
-		sendReply(fd, ERR_NOSUCHCHANNEL);
+		sendReply(fd, ERR_NOSUCHCHANNEL, name_ch);
 		return ;
 	}
 	if (clients[fd]->channels.find(name_ch) == clients[fd]->channels.end()) {
-		sendReply(fd, ERR_NOTONCHANNEL);
+		sendReply(fd, ERR_NOTONCHANNEL, name_ch);
 		return ;
 	}
 
@@ -313,7 +314,7 @@ void	Server::execTopic(int fd, Message msg)
 	if (msg.trailing.empty())
 	{
 		if (chan->topic.empty())
-			sendReply(fd, RPL_NOTOPIC);
+			sendReply(fd, RPL_NOTOPIC, name_ch);
 		else
 		{
 			std::string reply = ":localhost 332 " + clients[fd]->nickName + " " + name_ch;
@@ -324,7 +325,7 @@ void	Server::execTopic(int fd, Message msg)
 	else
 	{
 		if (chan->topicRestricted && chan->operators.find(fd) == chan->operators.end())
-			sendReply(fd, ERR_CHANOPRIVSNEEDED);
+			sendReply(fd, ERR_CHANOPRIVSNEEDED, name_ch);
 		else
 		{
 			chan->topic = msg.trailing;
@@ -362,7 +363,7 @@ void	Server::execPrivmsg(int fd, Message msg)
 			std::string channelName(params);
 			if (this->channels.find(channelName) == this->channels.end())
 			{
-				this->sendReply(fd, ERR_NOSUCHNICK);
+				this->sendReply(fd, ERR_NOSUCHNICK, channelName);
 				continue;
 			}
 			if (this->channels[channelName]->members.find(fd) == this->channels[channelName]->members.end())
@@ -392,7 +393,7 @@ void	Server::execPrivmsg(int fd, Message msg)
 				}
 			}
 			if (!found)
-				this->sendReply(fd, ERR_NOSUCHNICK);
+				this->sendReply(fd, ERR_NOSUCHNICK, params);
 		}
 	}
 }

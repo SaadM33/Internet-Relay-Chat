@@ -1,6 +1,5 @@
 #include "Channel.hpp"
-#include "Client.hpp"
-#include "utils.hpp"
+#include "Server.hpp"
 
 void	Channel::broadcast(Client *client, std::string& message, bool skipSender)
 {
@@ -66,6 +65,7 @@ void	Channel::removeClient(Client *client)
 	
 	client->channels.erase(name);
 }
+
 int	getFdFromNick(const std::map<int, Client *> &clients, std::string str);
 
 std::string	Channel::modeI(bool modeSwitch, modeBroadcast& brdcst)
