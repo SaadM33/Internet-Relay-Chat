@@ -475,10 +475,10 @@ void    Server::execKick(int fd, Message msg)
 	
 	// Determine comment (default to invoker nickname if not provided)
 	std::string comment;
-	if (msg.params.size() < 3)
+	if (msg.trailing.empty())
 		comment = this->clients[fd]->nickName;
 	else
-		comment = msg.params[2];
+		comment = msg.trailing;
 
 	// Loop over comma-separated users in msg.params[1]
 	std::stringstream ss(msg.params[1]);
