@@ -8,7 +8,7 @@
       "program": "${workspaceFolder}/ircserv",
       "args": [
         "6667",
-        "password"
+        "s"
       ],
       "stopAtEntry": true,
       "cwd": "${fileDirname}",

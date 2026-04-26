@@ -1,5 +1,13 @@
 #include "Server.hpp"
 
+int	g_flag = 1;
+
+void	handler(int sig)
+{
+	(void)sig;
+	g_flag = 0;
+}
+
 Server::Server(int ac, char **av)
 {
 	if (ac != 3)
@@ -62,6 +70,7 @@ void	Server::instantiateCmds()
 	this->cmdMap["MODE"] = &Server::execMode;
 	this->cmdMap["PRIVMSG"] = &Server::execPrivmsg;
 	this->cmdMap["PING"] = &Server::execPing;
+	this->cmdMap["QUIT"] = &Server::execQuit;
 }
 
 void	Server::ascend()
@@ -93,15 +102,27 @@ void	Server::ascend()
 	std::cout << "Server is listening on port " << this->port << std::endl;
 }
 
+void	Server::registerClient(int fd)
+{
+	if (clients[fd]->has_nick && clients[fd]->has_user && clients[fd]->has_pass)
+	{
+		clients[fd]->isRegistered = true;
+		sendReply(fd, RPL_WELCOME);
+	}
+}
+
 void	Server::ignite()
 {
 	this->poll_fds.push_back((struct pollfd){core_fd, POLLIN, 0});
 
-	// ctrl c later
-	while (true)
+	signal(SIGINT, handler);
+	while (g_flag)
 	{
-		if (poll(poll_fds.data(), poll_fds.size(), -1) == -1) {
-			throw std::runtime_error("Error: Failed to poll sockets.");
+		if (poll(poll_fds.data(), poll_fds.size(), -1) == -1) 
+		{
+			if (!g_flag)
+				break ;
+			throw std::runtime_error("Error: Failed to poll sockets.");	
 		}
 		for (size_t i = 0; i < poll_fds.size(); i++)
 		{
@@ -138,8 +159,7 @@ void	Server::acceptClient()
 	this->clients[new_fd] = new Client(new_fd, cAddr);
 
 	this->poll_fds.push_back((pollfd){new_fd, POLLIN, 0});
-
-	std::cout << "New client connected with fd: " << new_fd << std::endl;
+	std::cout << BOLD_GREEN << "New client connected with fd: " << new_fd << RESET << std::endl;
 }
 
 void	Server::processClient(int i)
@@ -160,17 +180,29 @@ void	Server::processClient(int i)
 
 void	Server::disconnectClient(int i, int fd)
 {
-	//removing a client from a channel, it should iterate over this->channels and not this->clients[fd]->channels
-	for (std::map<std::string, Channel *>::iterator it = this->clients[fd]->channels.begin(); it != this->clients[fd]->channels.end(); it++) 
-		it->second->removeClient(this->clients[fd]);
+	std::vector<std::string> rm;
+	for (std::map<std::string, Channel *>::iterator it = this->channels.begin(); it != this->channels.end(); it++)
+	{
+		if (it->second->members.find(fd) != it->second->members.end())
+			it->second->removeClient(this->clients[fd]);
+		if (it->second->members.empty())
+			rm.push_back(it->first);
+	}
+	for (std::vector<std::string>::iterator it = rm.begin(); it < rm.end(); it++)
+	{
+		delete channels[*it];
+		channels.erase(*it);
+	}
 
 	close(poll_fds[i].fd);
 	this->poll_fds.erase(poll_fds.begin() + i);
+	
 	delete this->clients[fd];
 	this->clients.erase(fd);
+
 	c_banished = true;
 
-	std::cout << "Client " << fd << " disconnected" << std::endl;
+	std::cout << BOLD_RED << "Client with fd: " << fd << " has been disconnected" << RESET << std::endl;
 }
 
 void	Server::sendReply(int fd, std::string code, std::string middle)
@@ -185,4 +217,16 @@ void	Server::sendReply(int fd, std::string code, std::string middle)
 	reply += " :" + replyMap[code] + "\r\n";
 
 	send(fd, reply.c_str(), reply.size(), 0);	
+}
+
+void	Server::nuke()
+{
+	for (size_t i = 0; i < poll_fds.size(); i++)
+		close(poll_fds[i].fd);
+	
+	for (std::map<int, Client *>::iterator it = clients.begin(); it != clients.end(); it++)
+		delete it->second;
+
+	for (std::map<std::string, Channel *>::iterator it = channels.begin(); it != channels.end(); it++)
+		delete it->second;
 }

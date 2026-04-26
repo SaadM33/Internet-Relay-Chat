@@ -1,6 +1,16 @@
 #include "Channel.hpp"
 #include "Server.hpp"
 
+Channel::Channel(std::string name) {
+	this->name = name;
+	this->topic = "";
+	this->key = "";
+	this->isInviteOnly = false;
+	this->topicRestricted = false;
+	this->isKeySet = false;
+	this->membersLimit = -1;
+}
+
 void	Channel::broadcast(Client *client, std::string& message, bool skipSender)
 {
 	std::string							str;
@@ -16,15 +26,32 @@ void	Channel::broadcast(Client *client, std::string& message, bool skipSender)
 	}
 }
 
-bool	Channel::InInviteList(int fd)
+void	Channel::operatorsBroadcast(Client *client, std::string& message)
 {
-	for (size_t i = 0; i < inviteList.size(); i++)
+	std::string							str;
+	std::map<int,Client *>::iterator	it;
+
+	std::string prefix = client->getPrefix();
+	for (it = operators.begin(); it != operators.end(); it++)
 	{
-		if (inviteList[i] == fd)
-			return true;
+		if (it->first == client->fd)
+			continue;
+		str = prefix + " " + message;
+		send(it->first, str.c_str(), str.size(), 0);
 	}
-	return false;
-}	
+}
+
+std::vector<int>::iterator	Channel::findInviteList(int fd)
+{
+	std::vector<int>::iterator it = inviteList.begin();
+
+	for (it = inviteList.begin(); it != inviteList.end(); it++)
+	{
+		if (*it == fd)
+			return it;
+	}
+	return it;
+}
 
 void	Channel::addClient(Client *client)
 {
@@ -60,7 +87,6 @@ void	Channel::addClient(Client *client)
 
 void	Channel::removeClient(Client *client)
 {
-
 	operators.erase(client->fd);
 	members.erase(client->fd);
 	

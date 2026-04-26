@@ -1,5 +1,11 @@
 #pragma once
 
+// Colors:
+#define RESET			"\033[0m"
+#define BOLD_RED     "\033[1;31m"
+#define BOLD_GREEN   "\033[1;32m"
+
+// Libraries:
 #include <iostream>
 #include <vector>
 #include <map>
@@ -16,6 +22,7 @@
 #include <arpa/inet.h>
 #include <cstdio>
 #include <sstream>
+#include <signal.h> 
 
 // Macros:
 #define RPL_CAP					"000"
@@ -74,5 +81,8 @@ typedef struct s_msg {
 // util functions
 
 typedef void (Server::*cmdHandler)(int, Message);
+
 bool	isAvailable(const std::map<int, Client *> &clients, std::string str);
 bool	isAlnumStr(std::string str);
+
+int		getFdFromNick(const std::map<int, Client *> &clients, std::string str);

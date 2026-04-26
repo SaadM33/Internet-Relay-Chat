@@ -17,3 +17,12 @@ bool	isAlnumStr(std::string str)
 	}
 	return true;
 }
+
+int	getFdFromNick(const std::map<int, Client *> &clients, std::string str)
+{
+	for (std::map<int, Client*>::const_iterator it = clients.begin(); it != clients.end(); ++it) {
+		if (it->second->nickName == str)
+			return it->first;
+	}
+	return -1;
+}

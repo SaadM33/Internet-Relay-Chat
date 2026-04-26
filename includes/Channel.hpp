@@ -31,7 +31,7 @@ class Channel
 		std::map<int, Client *>	operators;
 		std::vector<int>		inviteList;
 
-		Channel(std::string name) : name(name), topic(""), key(""), isInviteOnly(false) {}
+		Channel(std::string name);
 
 		std::string	modeI(bool, modeBroadcast&);
 		std::string	modeK(bool, std::string, modeBroadcast&);
@@ -42,7 +42,9 @@ class Channel
 		void	addClient(Client *client);
 		void	removeClient(Client *client);
 
-		bool	InInviteList(int fd);
-		void	broadcast(Client *client, std::string& message, bool skipSender = false);
+		std::vector<int>::iterator		findInviteList(int fd);
+		void							broadcast(Client *client, std::string& message, bool skipSender = false);
+		void							operatorsBroadcast(Client *client, std::string& message);
+
 };
 

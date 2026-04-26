@@ -26,7 +26,6 @@ RESET        = \033[0m
 CC			= c++
 
 CFLAGS      = -Wall -Wextra -Werror -g -std=c++98
-# CFLAGS      = -g -std=c++98
 
 CFLAGS_MAIN = $(CFLAGS) -I $(INCLUDES_DIR)
 
@@ -38,7 +37,7 @@ RM			= rm -rf
 
 SERVER_DIR		= src
 
-CLIENT_DIR		= client
+COMMAND_DIR		= src/cmds
 
 UTILS_DIR		= utils
 
@@ -54,9 +53,10 @@ NAME			= ircserv
 
 INCLUDES_SRCS	= Server.hpp Client.hpp Channel.hpp utils.hpp
 
-SERVER_SRCS		= Server.cpp Client.cpp Parsing.cpp ProcessCmd.cpp Commands.cpp Channel.cpp
+SERVER_SRCS		= Server.cpp Client.cpp Parsing.cpp ProcessCmd.cpp Channel.cpp
 
-CLIENT_SRCS		=
+COMMAND_SRCS	= Cap.cpp Invite.cpp Join.cpp Kick.cpp Mode.cpp Nick.cpp Part.cpp \
+				  Pass.cpp Ping.cpp Privmsg.cpp Quit.cpp Topic.cpp User.cpp
 
 UTILS_SRCS		= utils.cpp
 
@@ -64,7 +64,7 @@ HEADER_FILE		= $(addprefix $(INCLUDES_DIR)/, $(INCLUDES_SRCS))
 
 SRCS			= main.cpp \
 				  $(addprefix $(SERVER_DIR)/, $(SERVER_SRCS)) \
-				  $(addprefix $(CLIENT_DIR)/, $(CLIENT_SRCS)) \
+				  $(addprefix $(COMMAND_DIR)/, $(COMMAND_SRCS)) \
 				  $(addprefix $(UTILS_DIR)/, $(UTILS_SRCS))
 
 OBJECTS			= $(addprefix $(OBJ_DIR)/, $(SRCS:.cpp=.o))

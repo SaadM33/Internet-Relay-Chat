@@ -8,7 +8,7 @@ int main(int ac, char **av)
 	{
 		Srv.ascend();
 		Srv.ignite();
-		// Srv.nuke();
+		Srv.nuke();
 	}
 	catch (const std::exception& e)
 	{

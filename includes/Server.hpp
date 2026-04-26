@@ -4,7 +4,6 @@
 #include "Client.hpp"
 #include "utils.hpp"
 
-
 class Server
 {
 	private:
@@ -24,14 +23,16 @@ class Server
 		std::map<std::string, std::string>	replyMap;
 
 	public:
-		
+
 		Server(int, char **);
+		// ~Server();
 
 		void	instantiateCmds();
 		void	instantiateReplies();
 
 		void	ascend();
 		void	ignite();
+		void	nuke();
 		
 		void	acceptClient();
 		void	processClient(int);
@@ -54,6 +55,7 @@ class Server
 		void	execMode(int, Message);
 		void	execPrivmsg(int, Message);
 		void	execPing(int, Message);
+		void	execQuit(int, Message);
 
 		void	sendReply(int fd, std::string code, std::string middle = "");
 };

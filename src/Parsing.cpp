@@ -61,5 +61,13 @@ void	Server::handleInput(int fd)
     		continue;
 
 		this->processCmd(fd, msg);
+		size_t i;
+		for (i = 0; i < poll_fds.size(); i++)
+		{
+			if (fd == poll_fds[i].fd)
+				break ;
+		}
+		if (i >= poll_fds.size())
+			break ;
 	}
 }
