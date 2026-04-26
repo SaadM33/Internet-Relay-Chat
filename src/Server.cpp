@@ -160,7 +160,7 @@ void	Server::processClient(int i)
 
 void	Server::disconnectClient(int i, int fd)
 {
-	// removing a client from a channel, it should iterate over this->channels and not this->clients[fd]->channels
+	//removing a client from a channel, it should iterate over this->channels and not this->clients[fd]->channels
 	for (std::map<std::string, Channel *>::iterator it = this->clients[fd]->channels.begin(); it != this->clients[fd]->channels.end(); it++) 
 		it->second->removeClient(this->clients[fd]);
 

@@ -24,6 +24,7 @@ class Channel
 		bool					isInviteOnly;
 		bool					isKeySet;
 		bool					topicRestricted;
+
 		int						membersLimit;
 
 		std::map<int, Client *>	members;

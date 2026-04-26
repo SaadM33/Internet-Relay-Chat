@@ -189,17 +189,16 @@ void	Server::execMode(int fd, Message msg)
 	std::string		target = msg.params[0];
 	std::string		senderNick = this->clients[fd]->nickName;
 
-	if (target[0] != '#') {
+	if (target[0] != '#')
+	{
 		if (target != senderNick) {
 			sendReply(fd, ERR_USERSDONTMATCH);
 			return ;
 		}
-
 		if (msg.params.size() == 1) {
 			sendReply(fd, RPL_UMODEIS);
 			return ;
 		}
-
 		std::string reply = ":" + senderNick + " MODE " + senderNick + " :" + msg.params[1] + "\r\n";
 		send(fd, reply.c_str(), reply.size(), 0);
 
@@ -222,7 +221,33 @@ void	Server::execMode(int fd, Message msg)
 	}
 
 	if (msg.params.size() == 1) {
-		sendReply(fd, RPL_CHANNELMODEIS, target);
+		std::string reply;
+
+		if (channels[target]->isInviteOnly)
+			reply += "i";
+		if (channels[target]->topicRestricted)
+			reply += "t";
+		if (channels[target]->isKeySet)
+			reply += "k";
+		if (channels[target]->membersLimit != -1)
+			reply += "l";
+		
+		if (channels[target]->isKeySet)
+			reply += " " + channels[target]->key;
+
+		if (channels[target]->membersLimit != -1)
+		{
+			std::ostringstream oss;
+			oss << channels[target]->membersLimit;
+			reply += " " + oss.str();
+		}
+
+		if (!reply.empty())
+			reply = "+" + reply;
+
+		reply = target + reply;
+
+		sendReply(fd, RPL_CHANNELMODEIS, reply);
 		return ;
 	}
 
