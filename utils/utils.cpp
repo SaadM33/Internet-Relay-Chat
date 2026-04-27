@@ -9,10 +9,14 @@ bool	isAvailable(const std::map<int, Client *> &clients, std::string str)
 	return true;
 }
 
-bool	isAlnumStr(std::string str)
+bool	isValidNick(std::string str)
 {
+	if (str[0] == '#' || str[0] == '@')
+		return false;
+
 	for (size_t i = 0; i < str.size(); i++) {
-		if (!isalnum(str[i]) && str[i] != '-' && str[i] != '_')
+		if (!isalnum(str[i]) && str[i] != '-' && str[i] != '_' && str[i] != '[' && str[i] != ']' && str[i] != '\\'
+			&& str[i] != '`' && str[i] != '_' && str[i] != '^' && str[i] != '{' && str[i] != '|' && str[i] != '}')
 			return false;
 	}
 	return true;

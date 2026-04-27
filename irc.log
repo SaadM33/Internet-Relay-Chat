@@ -1,0 +1,23 @@
+<< CAP LS
+<< PASS s
+<< NICK hqannouc
+<< USER hqannouc hqannouc localhost :Hatim Qannouch
+>> :localhost CAP * LS :
+<< CAP END
+>> :localhost 433 * hqannouc :Nickname is already in use
+<< NICK hqannouc_
+>> :localhost 001 hqannouc_ :Welcome to the IRC server Mortal!
+<< MODE hqannouc_ +i
+<< WHOIS hqannouc
+>> :hqannouc_ MODE hqannouc_ :+i
+>> :localhost 421 hqannouc_ WHOIS :Command beyond comprehension
+<< PING localhost
+>> PONG :localhost
+--> lag pong
+<< PING localhost
+>> PONG :localhost
+--> FAILED whois
+--> lag pong
+<< PING localhost
+>> PONG :localhost
+--> lag pong

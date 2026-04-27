@@ -7,7 +7,7 @@ void	Server::execNick(int fd, Message msg)
 		return ;
 	}
 
-	if (!isAlnumStr(msg.params[0])) {
+	if (!isValidNick(msg.params[0])) {
 		sendReply(fd, ERR_ERRONEUSNICKNAME);
 		return ;
 	}
@@ -30,6 +30,9 @@ void	Server::execNick(int fd, Message msg)
 		std::map<std::string, Channel *>::iterator it;
 		for (it = clients[fd]->channels.begin(); it != clients[fd]->channels.end(); it++)
 			it->second->broadcast(clients[fd], brdcst);
+
+		brdcst = clients[fd]->getPrefix() + " " + brdcst;
+		send(fd, brdcst.data(), brdcst.size(), 0);
 		
 		clients[fd]->nickName = msg.params[0];
 	}

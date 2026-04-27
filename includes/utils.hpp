@@ -83,6 +83,6 @@ typedef struct s_msg {
 typedef void (Server::*cmdHandler)(int, Message);
 
 bool	isAvailable(const std::map<int, Client *> &clients, std::string str);
-bool	isAlnumStr(std::string str);
+bool	isValidNick(std::string str);
 
 int		getFdFromNick(const std::map<int, Client *> &clients, std::string str);
