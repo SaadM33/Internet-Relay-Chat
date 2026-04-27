@@ -23,6 +23,7 @@
 #include <cstdio>
 #include <sstream>
 #include <signal.h> 
+#include <algorithm>
 
 // Macros:
 #define RPL_CAP					"000"

@@ -57,5 +57,7 @@ class Server
 		void	execPing(int, Message);
 		void	execQuit(int, Message);
 
+		void	execBot(int, std::string);
+
 		void	sendReply(int fd, std::string code, std::string middle = "");
 };

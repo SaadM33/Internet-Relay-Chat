@@ -10,6 +10,7 @@ void	handler(int sig)
 
 Server::Server(int ac, char **av)
 {
+	std::srand(time(0));
 	if (ac != 3)
 		throw std::invalid_argument("Usage: ./ircserv <port> <password>");
 
