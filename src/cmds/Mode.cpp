@@ -2,7 +2,17 @@
 
 void	cleanUpModes(std::string& modes)
 {
-	bool	modeSwitch = false;
+	bool	modeSwitch;
+
+	if (modes.empty())
+		return ;
+
+	if (modes[0] == '+')
+		modeSwitch = false;
+	else if (modes[0] == '-')
+		modeSwitch = true;
+	else
+		return ;
 
 	for (size_t i = 0; i < modes.size(); i++) {
 		if ((modeSwitch == true && modes[i] == '+') || (modeSwitch == false && modes[i] == '-'))
@@ -25,20 +35,7 @@ void	Server::execMode(int fd, Message msg)
 	std::string		senderNick = this->clients[fd]->nickName;
 
 	if (target[0] != '#')
-	{
-		if (target != senderNick) {
-			sendReply(fd, ERR_USERSDONTMATCH);
-			return ;
-		}
-		if (msg.params.size() == 1) {
-			sendReply(fd, RPL_UMODEIS);
-			return ;
-		}
-		std::string reply = ":" + senderNick + " MODE " + senderNick + " :" + msg.params[1] + "\r\n";
-		send(fd, reply.c_str(), reply.size(), 0);
-
 		return ;
-	}
 
 	if (channels.find(target) == channels.end()) {
 		sendReply(fd, ERR_NOSUCHCHANNEL, target);
@@ -47,11 +44,6 @@ void	Server::execMode(int fd, Message msg)
 
 	if (channels[target]->members.find(fd) == channels[target]->members.end()) {
 		sendReply(fd, ERR_NOTONCHANNEL, target);
-		return ;
-	}
-
-	if (channels[target]->operators.find(fd) == channels[target]->operators.end()) {
-		sendReply(fd, ERR_CHANOPRIVSNEEDED, target);
 		return ;
 	}
 
@@ -83,6 +75,11 @@ void	Server::execMode(int fd, Message msg)
 		reply = target + reply;
 
 		sendReply(fd, RPL_CHANNELMODEIS, reply);
+		return ;
+	}
+
+	if (channels[target]->operators.find(fd) == channels[target]->operators.end()) {
+		sendReply(fd, ERR_CHANOPRIVSNEEDED, target);
 		return ;
 	}
 
