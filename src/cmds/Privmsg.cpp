@@ -34,6 +34,7 @@ void	Server::execPrivmsg(int fd, Message msg)
 				send(fd, reply.c_str(), reply.size(), 0);
 				continue ;
 			}
+			
 			std::string message = "PRIVMSG " + params + " :" + msg.trailing + "\r\n";
 			this->channels[channelName]->broadcast(this->clients[fd], message, true);
 		}

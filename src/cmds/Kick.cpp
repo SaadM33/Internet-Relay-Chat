@@ -62,5 +62,10 @@ void    Server::execKick(int fd, Message msg)
 		std::string brdcst = "KICK " + msg.params[0] + " " + targetNick + " :" + comment + "\r\n";
 		this->channels[msg.params[0]]->broadcast(this->clients[fd], brdcst);
 		this->channels[msg.params[0]]->removeClient(this->clients[targetFd]);
+
+		if (this->channels[msg.params[0]]->members.empty()) {
+			delete channels[msg.params[0]];
+			channels.erase(msg.params[0]);
+		}
 	}
 }
